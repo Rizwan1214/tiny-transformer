@@ -109,7 +109,9 @@ export function positionalEncoding(n: number, d = D_MODEL): Matrix {
   );
 }
 
-const WEIGHTS = {
+export const LOGIT_SCALE = 1.5;
+
+export const WEIGHTS = {
   Wq: randomMatrix(11, D_MODEL, D_MODEL),
   Wk: randomMatrix(22, D_MODEL, D_MODEL),
   Wv: randomMatrix(33, D_MODEL, D_MODEL),
@@ -129,10 +131,14 @@ export interface TransformerTrace {
   S: MaskedMatrix; // scaled scores Q·Kᵀ/√d
   A: Matrix; // attention weights
   Z: Matrix; // A·V
+  R1: Matrix; // X + Z (residual, before LayerNorm)
   Y: Matrix; // LN(X + Z)
+  hidden: Matrix; // ReLU(Y·W1), the FFN's 8-wide hidden layer
   F: Matrix; // FFN(Y)
+  R2: Matrix; // Y + F (residual, before LayerNorm)
   H: Matrix; // LN(Y + F)
   vocab: string[];
+  logits: number[];
   probs: number[]; // next-token probabilities over `vocab`
 }
 
@@ -156,15 +162,18 @@ export function runTransformer(text: string, causalMask = true): TransformerTrac
   const A = S.map(softmax);
   const Z = matmul(A, V);
 
-  const Y = layerNorm(add(X, Z));
-  const F = matmul(relu(matmul(Y, WEIGHTS.W1)), WEIGHTS.W2);
-  const H = layerNorm(add(Y, F));
+  const R1 = add(X, Z);
+  const Y = layerNorm(R1);
+  const hidden = relu(matmul(Y, WEIGHTS.W1));
+  const F = matmul(hidden, WEIGHTS.W2);
+  const R2 = add(Y, F);
+  const H = layerNorm(R2);
 
   // Weight tying: compare the last hidden state with each word's embedding.
   const last = H[n - 1];
   const vocab = CANDIDATE_VOCAB;
-  const logits = vocab.map((w) => 1.5 * embed(w).reduce((s, v, k) => s + v * last[k], 0));
+  const logits = vocab.map((w) => LOGIT_SCALE * embed(w).reduce((s, v, k) => s + v * last[k], 0));
   const probs = softmax(logits);
 
-  return { tokens, ids, E, PE, X, Q, K, V, S, A, Z, Y, F, H, vocab, probs };
+  return { tokens, ids, E, PE, X, Q, K, V, S, A, Z, R1, Y, hidden, F, R2, H, vocab, logits, probs };
 }

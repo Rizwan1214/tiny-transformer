@@ -1,3 +1,5 @@
+import { cellHandlers, highlightStyle, useHover } from "./hover";
+
 interface NextTokenBarsProps {
   tokens: string[];
   vocab: string[];
@@ -5,7 +7,8 @@ interface NextTokenBarsProps {
 }
 
 export function NextTokenBars({ tokens, vocab, probs }: NextTokenBarsProps) {
-  const ranked = vocab.map((word, i) => ({ word, p: probs[i] })).sort((a, b) => b.p - a.p);
+  const hover = useHover();
+  const ranked = vocab.map((word, i) => ({ word, p: probs[i], index: i })).sort((a, b) => b.p - a.p);
   const top = ranked[0];
 
   return (
@@ -15,8 +18,13 @@ export function NextTokenBars({ tokens, vocab, probs }: NextTokenBarsProps) {
         <span className="rounded-lg bg-accent px-2.5 py-0.5 text-white">{top.word}</span>
       </p>
       <ul className="m-0 flex max-w-[640px] list-none flex-col gap-2 p-0">
-        {ranked.map(({ word, p }, k) => (
-          <li key={word} className="flex items-center gap-3">
+        {ranked.map(({ word, p, index }, k) => (
+          <li
+            key={word}
+            className="flex cursor-pointer items-center gap-3 rounded-md"
+            style={highlightStyle(hover, "P", index, 0)}
+            {...cellHandlers(hover, { key: "P", i: index, j: 0 })}
+          >
             <span
               className={`w-14 text-right font-mono text-sm ${k === 0 ? "font-bold text-accent-ink" : "text-ink-soft"}`}
             >

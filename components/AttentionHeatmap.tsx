@@ -1,5 +1,6 @@
 import { MASKED_STYLE, maxAbs, probStyle, valueStyle } from "@/lib/colors";
 import { argmax, type MaskedMatrix, type Matrix } from "@/lib/transformer";
+import { cellHandlers, highlightStyle, useHover } from "./hover";
 
 interface AttentionHeatmapProps {
   tokens: string[];
@@ -13,6 +14,8 @@ interface AttentionHeatmapProps {
 
 export function AttentionHeatmap({ tokens, scores, weights, mode, focus, onFocus }: AttentionHeatmapProps) {
   const max = maxAbs(scores);
+  const hover = useHover();
+  const cellKey = mode === "softmax" ? "A" : "S";
 
   return (
     <div className="overflow-x-auto">
@@ -53,8 +56,9 @@ export function AttentionHeatmap({ tokens, scores, weights, mode, focus, onFocus
                 return (
                   <span
                     key={j}
-                    className="flex h-11 w-16 items-center justify-center rounded-md font-mono text-xs text-ink"
-                    style={style}
+                    className="relative flex h-11 w-16 cursor-pointer items-center justify-center rounded-md font-mono text-xs text-ink"
+                    style={{ ...style, ...highlightStyle(hover, cellKey, i, j) }}
+                    {...cellHandlers(hover, { key: cellKey, i, j })}
                   >
                     {text}
                   </span>

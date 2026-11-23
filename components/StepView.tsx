@@ -41,7 +41,7 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
         <>
           <Legend />
           <MatrixRow>
-            <MatrixGrid label="E" matrix={trace.E} rowLabels={rows} />
+            <MatrixGrid cellKey="E" label="E" matrix={trace.E} rowLabels={rows} />
           </MatrixRow>
         </>
       );
@@ -50,11 +50,11 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
         <>
           <Legend />
           <MatrixRow>
-            <MatrixGrid label="E" matrix={trace.E} rowLabels={rows} />
+            <MatrixGrid cellKey="E" label="E" matrix={trace.E} rowLabels={rows} />
             <Operator>+</Operator>
-            <MatrixGrid label="PE" matrix={trace.PE} rowLabels={rows} />
+            <MatrixGrid cellKey="PE" label="PE" matrix={trace.PE} rowLabels={rows} />
             <Operator>=</Operator>
-            <MatrixGrid label="X" matrix={trace.X} rowLabels={rows} />
+            <MatrixGrid cellKey="X" label="X" matrix={trace.X} rowLabels={rows} />
           </MatrixRow>
         </>
       );
@@ -63,9 +63,9 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
         <>
           <Legend />
           <MatrixRow>
-            <MatrixGrid label="Q = X·W_Q" matrix={trace.Q} rowLabels={rows} />
-            <MatrixGrid label="K = X·W_K" matrix={trace.K} rowLabels={rows} />
-            <MatrixGrid label="V = X·W_V" matrix={trace.V} rowLabels={rows} />
+            <MatrixGrid cellKey="Q" label="Q = X·W_Q" matrix={trace.Q} rowLabels={rows} />
+            <MatrixGrid cellKey="K" label="K = X·W_K" matrix={trace.K} rowLabels={rows} />
+            <MatrixGrid cellKey="V" label="V = X·W_V" matrix={trace.V} rowLabels={rows} />
           </MatrixRow>
         </>
       );
@@ -92,11 +92,11 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
         <>
           <Legend />
           <MatrixRow>
-            <MatrixGrid label="A" matrix={trace.A} rowLabels={rows} colLabels={tokens} variant="prob" maskFrom={trace.S} />
+            <MatrixGrid cellKey="A" label="A" matrix={trace.A} rowLabels={rows} colLabels={tokens} variant="prob" maskFrom={trace.S} />
             <Operator>×</Operator>
-            <MatrixGrid label="V" matrix={trace.V} rowLabels={rows} />
+            <MatrixGrid cellKey="V" label="V" matrix={trace.V} rowLabels={rows} />
             <Operator>=</Operator>
-            <MatrixGrid label="Z" matrix={trace.Z} rowLabels={rows} />
+            <MatrixGrid cellKey="Z" label="Z" matrix={trace.Z} rowLabels={rows} />
           </MatrixRow>
           <FocusPanel tokens={tokens} weights={trace.A} focus={focus} onFocus={onFocus} showBreakdown />
         </>
@@ -106,11 +106,11 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
         <>
           <Legend />
           <MatrixRow>
-            <MatrixGrid label="Y = LN(X + Z)" matrix={trace.Y} rowLabels={rows} />
+            <MatrixGrid cellKey="Y" label="Y = LN(X + Z)" matrix={trace.Y} rowLabels={rows} />
             <Operator>→ FFN →</Operator>
-            <MatrixGrid label="FFN(Y)" matrix={trace.F} rowLabels={rows} />
+            <MatrixGrid cellKey="F" label="FFN(Y)" matrix={trace.F} rowLabels={rows} />
             <Operator>→ add, LN →</Operator>
-            <MatrixGrid label="H" matrix={trace.H} rowLabels={rows} />
+            <MatrixGrid cellKey="H" label="H" matrix={trace.H} rowLabels={rows} />
           </MatrixRow>
         </>
       );

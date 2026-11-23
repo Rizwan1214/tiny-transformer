@@ -1,5 +1,7 @@
 import { MASKED_STYLE, maxAbs, probStyle, valueStyle } from "@/lib/colors";
+import type { CellKey } from "@/lib/explain";
 import { argmax, type MaskedMatrix } from "@/lib/transformer";
+import { cellHandlers, highlightStyle, useHover } from "./hover";
 
 interface MatrixGridProps {
   label: string;
@@ -10,6 +12,8 @@ interface MatrixGridProps {
   variant?: "value" | "prob";
   /** Cells that are `null` here are drawn as masked (used for attention weights). */
   maskFrom?: MaskedMatrix;
+  /** Makes cells explainable on hover/tap in the Calculation panel. */
+  cellKey?: CellKey;
 }
 
 export function MatrixGrid({
@@ -19,7 +23,9 @@ export function MatrixGrid({
   colLabels,
   variant = "value",
   maskFrom,
+  cellKey,
 }: MatrixGridProps) {
+  const hover = useHover();
   const cols = colLabels ?? matrix[0].map((_, j) => `d${j}`);
   const max = maxAbs(matrix);
 
@@ -56,8 +62,11 @@ export function MatrixGrid({
                 return (
                   <span
                     key={j}
-                    className="flex h-[34px] w-14 items-center justify-center rounded-md font-mono text-xs font-medium text-ink"
-                    style={style}
+                    className={`relative flex h-[34px] w-14 items-center justify-center rounded-md font-mono text-xs font-medium text-ink ${
+                      cellKey ? "cursor-pointer" : ""
+                    }`}
+                    style={cellKey ? { ...style, ...highlightStyle(hover, cellKey, i, j) } : style}
+                    {...(cellKey ? cellHandlers(hover, { key: cellKey, i, j }) : {})}
                   >
                     {v === null ? "−∞" : masked ? "0" : v.toFixed(2)}
                   </span>

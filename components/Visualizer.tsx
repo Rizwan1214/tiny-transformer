@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { relatedCells, type CellRef } from "@/lib/explain";
 import { STEPS } from "@/lib/steps";
 import { runTransformer } from "@/lib/transformer";
+import { CalcPanel } from "./CalcPanel";
+import { HoverContext } from "./hover";
 import { StepRail } from "./StepRail";
 import { StepView } from "./StepView";
 
@@ -13,16 +16,30 @@ export function Visualizer() {
   const [step, setStep] = useState(0);
   const [causalMask, setCausalMask] = useState(true);
   const [focusChoice, setFocusChoice] = useState<number | null>(null);
+  const [activeCell, setActiveCell] = useState<CellRef | null>(null);
 
   const trace = useMemo(() => runTransformer(text, causalMask), [text, causalMask]);
   const n = trace.tokens.length;
   const focus = focusChoice !== null && focusChoice < n ? focusChoice : n - 1;
   const meta = STEPS[step];
   const isLast = step === STEPS.length - 1;
+  const hasNumbers = step >= 2;
+
+  // activeCell is cleared whenever the sentence or step changes, so it always fits the trace.
+  const hover = useMemo(
+    () => ({ active: activeCell, related: relatedCells(activeCell), select: setActiveCell }),
+    [activeCell],
+  );
+
+  const goTo = (next: number) => {
+    setStep(next);
+    setActiveCell(null);
+  };
 
   const changeText = (value: string) => {
     setText(value);
     setFocusChoice(null);
+    setActiveCell(null);
   };
 
   return (
@@ -91,7 +108,7 @@ export function Visualizer() {
       </header>
 
       <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-6 p-6">
-        <StepRail current={step} onSelect={setStep} />
+        <StepRail current={step} onSelect={goTo} />
 
         <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-8">
           <div className="flex flex-col gap-2.5">
@@ -107,13 +124,16 @@ export function Visualizer() {
           </div>
 
           <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#FAFBFC] p-6">
-            <StepView step={step} trace={trace} focus={focus} onFocus={setFocusChoice} />
+            <HoverContext.Provider value={hover}>
+              <StepView step={step} trace={trace} focus={focus} onFocus={setFocusChoice} />
+            </HoverContext.Provider>
+            {hasNumbers && <CalcPanel trace={trace} active={activeCell} />}
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
             <button
               type="button"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              onClick={() => goTo(Math.max(0, step - 1))}
               disabled={step === 0}
               className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] border border-line-strong bg-white px-4.5 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -136,7 +156,7 @@ export function Visualizer() {
             </div>
             <button
               type="button"
-              onClick={() => setStep((s) => (isLast ? 0 : s + 1))}
+              onClick={() => goTo(isLast ? 0 : step + 1)}
               className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] bg-accent px-4.5 text-sm font-semibold text-white hover:bg-accent-ink"
             >
               {isLast ? "Shuru se dobara" : `Next: ${STEPS[step + 1].title}`}
