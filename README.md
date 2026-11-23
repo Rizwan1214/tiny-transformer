@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tiny Transformer
 
-## Getting Started
+An interactive, step-by-step visualizer of a tiny transformer (1 layer, 1 head, `d_model = 4`).
+Type a sentence and walk through every stage, from tokenization to next-token prediction, with the real numbers on screen.
 
-First, run the development server:
+## The 10 steps
+
+1. Tokenization
+2. Token IDs
+3. Embedding
+4. Positional Encoding
+5. Q, K, V
+6. Attention Scores (with an optional causal mask)
+7. Softmax (attention map, with a per-token focus view)
+8. Weighted Sum (`Z = A·V`, with the per-token breakdown)
+9. Add & Norm + Feed-Forward
+10. Next Token (probability bars)
+
+Weights are random but seeded, so the same sentence always gives the same numbers.
+The goal is to show *how* the computation flows, not to make good predictions.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+lib/transformer.ts   pure math: tokenize, embed, attention, softmax, layer norm, FFN
+lib/steps.ts         title, formula and explanation for each step
+lib/colors.ts        cell colors (diverging for values, sequential for probabilities)
+components/          Visualizer (state), StepView, MatrixGrid, AttentionHeatmap, ...
+```
 
-## Learn More
+## Tech
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4.
