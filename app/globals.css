@@ -1,20 +1,103 @@
 @import "tailwindcss";
 
+/* Fonts come from next/font variables set on <body>, so they stay inline. */
 @theme inline {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-space-grotesk), var(--font-inter), sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
 
-  --color-canvas: #f6f7f9;
-  --color-ink: #14161c;
-  --color-ink-soft: #3e4452;
-  --color-muted: #5b6170;
-  --color-line: #e3e6ec;
-  --color-line-strong: #c5cad4;
-  --color-accent: #3b4bd8;
-  --color-accent-ink: #2d3ab0;
-  --color-accent-soft: #eef0ff;
-  --color-accent-line: #c9cef4;
+/*
+ * Colors point at --tt-* palette variables so one class on <html> can swap
+ * the whole theme. Components also read --color-* directly in inline styles.
+ */
+@theme {
+  --color-canvas: var(--tt-canvas);
+  --color-surface: var(--tt-surface);
+  --color-panel: var(--tt-panel);
+  --color-track: var(--tt-track);
+  --color-ink: var(--tt-ink);
+  --color-on-ink: var(--tt-on-ink);
+  --color-ink-soft: var(--tt-ink-soft);
+  --color-muted: var(--tt-muted);
+  --color-line: var(--tt-line);
+  --color-line-strong: var(--tt-line-strong);
+  --color-accent: var(--tt-accent);
+  --color-accent-ink: var(--tt-accent-ink);
+  --color-accent-soft: var(--tt-accent-soft);
+  --color-accent-line: var(--tt-accent-line);
+  --color-hatch-a: var(--tt-hatch-a);
+  --color-hatch-b: var(--tt-hatch-b);
+  --color-danger: var(--tt-danger);
+}
+
+:root {
+  color-scheme: light;
+  --tt-canvas: #f6f7f9;
+  --tt-surface: #ffffff;
+  --tt-panel: #fafbfc;
+  --tt-track: #eef0f4;
+  --tt-ink: #14161c;
+  --tt-on-ink: #ffffff;
+  --tt-ink-soft: #3e4452;
+  --tt-muted: #5b6170;
+  --tt-line: #e3e6ec;
+  --tt-line-strong: #c5cad4;
+  --tt-accent: #3b4bd8;
+  --tt-accent-ink: #2d3ab0;
+  --tt-accent-soft: #eef0ff;
+  --tt-accent-line: #c9cef4;
+  --tt-hatch-a: #eceef2;
+  --tt-hatch-b: #f7f8fa;
+  --tt-danger: #b42318;
+}
+
+/*
+ * Dark palette, repeated below for the system preference: used when the viewer
+ * picked dark, or their system is dark and they picked nothing (no .light class).
+ */
+:root.dark {
+  color-scheme: dark;
+  --tt-canvas: #0f1115;
+  --tt-surface: #171a21;
+  --tt-panel: #1c2029;
+  --tt-track: #262b35;
+  --tt-ink: #e8eaf0;
+  --tt-on-ink: #0f1115;
+  --tt-ink-soft: #c3c8d4;
+  --tt-muted: #9aa1b2;
+  --tt-line: #2a2f3a;
+  --tt-line-strong: #3b4250;
+  --tt-accent: #3b4bd8;
+  --tt-accent-ink: #a3adff;
+  --tt-accent-soft: #232a4d;
+  --tt-accent-line: #3a4380;
+  --tt-hatch-a: #232731;
+  --tt-hatch-b: #1b1f27;
+  --tt-danger: #ff8a7a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --tt-canvas: #0f1115;
+    --tt-surface: #171a21;
+    --tt-panel: #1c2029;
+    --tt-track: #262b35;
+    --tt-ink: #e8eaf0;
+    --tt-on-ink: #0f1115;
+    --tt-ink-soft: #c3c8d4;
+    --tt-muted: #9aa1b2;
+    --tt-line: #2a2f3a;
+    --tt-line-strong: #3b4250;
+    --tt-accent: #3b4bd8;
+    --tt-accent-ink: #a3adff;
+    --tt-accent-soft: #232a4d;
+    --tt-accent-line: #3a4380;
+    --tt-hatch-a: #232731;
+    --tt-hatch-b: #1b1f27;
+    --tt-danger: #ff8a7a;
+  }
 }
 
 body {
@@ -25,6 +108,6 @@ body {
 
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-accent-ink);
   outline-offset: 2px;
 }

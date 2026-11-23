@@ -52,7 +52,7 @@ export function NextTokenBars({ tokens, vocab, probs }: NextTokenBarsProps) {
             >
               {word}
             </span>
-            <div className="h-7 flex-1 overflow-hidden rounded-md bg-[#EEF0F4]">
+            <div className="h-7 flex-1 overflow-hidden rounded-md bg-track">
               <motion.div
                 className="h-full rounded-md"
                 initial={{ width: "0%" }}

@@ -1,13 +1,14 @@
 import type { CSSProperties } from "react";
 
-// Alphas are capped at ~0.62 so dark text stays readable (≥ 4.5:1) on every cell.
+// Alphas are capped at ~0.62 so text stays readable (≥ 4.5:1) on every cell, over the
+// light surface with dark text and over the dark surface with light text alike.
 const POSITIVE = "59,75,216"; // accent blue
 const NEGATIVE = "217,72,15"; // orange
 
 export const MASKED_STYLE: CSSProperties = {
   background:
-    "repeating-linear-gradient(45deg, #ECEEF2, #ECEEF2 6px, #F7F8FA 6px, #F7F8FA 12px)",
-  color: "#5B6170",
+    "repeating-linear-gradient(45deg, var(--color-hatch-a), var(--color-hatch-a) 6px, var(--color-hatch-b) 6px, var(--color-hatch-b) 12px)",
+  color: "var(--color-muted)",
 };
 
 /** Diverging color: blue for positive, orange for negative, darker = bigger |v|. */
@@ -22,7 +23,7 @@ export function probStyle(p: number, isRowMax: boolean): CSSProperties {
   return {
     background: `rgba(${POSITIVE},${(0.05 + p * 0.57).toFixed(2)})`,
     fontWeight: isRowMax ? 700 : 500,
-    boxShadow: isRowMax ? "inset 0 0 0 2px #14161C" : undefined,
+    boxShadow: isRowMax ? "inset 0 0 0 2px var(--color-ink)" : undefined,
   };
 }
 

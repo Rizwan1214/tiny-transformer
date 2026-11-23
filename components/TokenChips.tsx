@@ -26,7 +26,8 @@ export function TokenChips({ tokens, ids }: TokenChipsProps) {
         height="24"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#5B6170"
+        stroke="currentColor"
+        className="text-muted"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -52,7 +53,7 @@ export function TokenChips({ tokens, ids }: TokenChipsProps) {
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: chipsDone + i * CHIP_STAGGER, duration: 0.25 }}
-                className="rounded-md border border-dashed border-[#8E97E6] bg-white px-2 py-1 font-mono text-[13px] text-accent-ink"
+                className="rounded-md border border-dashed border-accent-line bg-surface px-2 py-1 font-mono text-[13px] text-accent-ink"
               >
                 {ids[i]}
               </motion.span>

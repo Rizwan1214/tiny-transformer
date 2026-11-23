@@ -12,6 +12,7 @@ import { HoverContext } from "./hover";
 import { LangContext } from "./lang";
 import { StepRail } from "./StepRail";
 import { StepView } from "./StepView";
+import { ThemeToggle } from "./ThemeToggle";
 
 const PRESETS = ["the cat sat on the mat", "i love cats", "main ghar ja raha hoon"];
 const LANG_KEY = "tiny-transformer:lang";
@@ -84,11 +85,11 @@ export function Visualizer() {
     <LangContext.Provider value={lang}>
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-canvas text-ink">
-      <header className="border-b border-line bg-white">
+      <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-[1360px] flex-wrap items-center gap-x-4 gap-y-3 px-3 py-3 md:gap-x-7 md:gap-y-4 md:px-6 md:py-4">
           <div className="flex shrink-0 items-center gap-3">
-            <div className="hidden h-9 w-9 items-center justify-center rounded-[10px] bg-ink sm:flex">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <div className="hidden h-9 w-9 items-center justify-center rounded-[10px] bg-ink text-on-ink sm:flex">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" rx="1.5" />
                 <rect x="14" y="3" width="7" height="7" rx="1.5" />
                 <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -115,7 +116,7 @@ export function Visualizer() {
                 onClick={() => setMode(value)}
                 aria-pressed={mode === value}
                 className={`h-9 cursor-pointer rounded-lg px-2 text-xs font-semibold sm:px-3 sm:text-[13px] ${
-                  mode === value ? "bg-ink text-white" : "text-ink hover:bg-white"
+                  mode === value ? "bg-ink text-on-ink" : "text-ink hover:bg-surface"
                 }`}
               >
                 {name}
@@ -135,7 +136,7 @@ export function Visualizer() {
                 type="text"
                 value={text}
                 onChange={(e) => changeText(e.target.value)}
-                className="h-11 min-w-0 flex-1 rounded-[10px] border border-line-strong bg-white px-3.5 font-mono text-[15px] text-ink"
+                className="h-11 min-w-0 flex-1 rounded-[10px] border border-line-strong bg-surface px-3.5 font-mono text-[15px] text-ink"
               />
             </div>
             <div className="-mx-3 flex items-center gap-1.5 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
@@ -164,7 +165,7 @@ export function Visualizer() {
                   onClick={() => changeHeads(h)}
                   aria-pressed={numHeads === h}
                   className={`h-9 min-w-9 cursor-pointer rounded-lg px-2 font-mono text-sm font-semibold ${
-                    numHeads === h ? "bg-ink text-white" : "text-ink hover:bg-white"
+                    numHeads === h ? "bg-ink text-on-ink" : "text-ink hover:bg-surface"
                   }`}
                 >
                   {h}
@@ -176,7 +177,7 @@ export function Visualizer() {
               onClick={() => setCausalMask((m) => !m)}
               aria-pressed={causalMask}
               className={`min-h-11 cursor-pointer rounded-[10px] border px-3.5 text-[13px] font-semibold ${
-                causalMask ? "border-ink bg-ink text-white" : "border-line-strong bg-white text-ink"
+                causalMask ? "border-ink bg-ink text-on-ink" : "border-line-strong bg-surface text-ink"
               }`}
             >
               <span className="sm:hidden">Mask: {causalMask ? t("on") : t("off")}</span>
@@ -186,6 +187,7 @@ export function Visualizer() {
           </>
           )}
 
+          <div className="flex shrink-0 items-center gap-2">
           <div role="group" aria-label={t("language")} className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
             {LANGS.map((l) => (
               <button
@@ -196,19 +198,21 @@ export function Visualizer() {
                 aria-label={l.name}
                 title={l.name}
                 className={`h-9 min-w-9 cursor-pointer rounded-lg px-2 font-mono text-xs font-semibold ${
-                  lang === l.value ? "bg-ink text-white" : "text-ink hover:bg-white"
+                  lang === l.value ? "bg-ink text-on-ink" : "text-ink hover:bg-surface"
                 }`}
               >
                 {l.short}
               </button>
             ))}
           </div>
+          <ThemeToggle />
+          </div>
         </div>
       </header>
 
       {mode === "gpt2" ? (
       <main className="mx-auto max-w-[1360px] p-3 md:p-6">
-        <section className="min-w-0 rounded-2xl border border-line bg-white p-4 md:p-8">
+        <section className="min-w-0 rounded-2xl border border-line bg-surface p-4 md:p-8">
           <Gpt2Explorer />
         </section>
       </main>
@@ -216,7 +220,7 @@ export function Visualizer() {
       <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-4 p-3 md:gap-6 md:p-6">
         <StepRail current={step} onSelect={goTo} />
 
-        <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-4 md:p-8">
+        <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-surface p-4 md:p-8">
           <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`${step}-${numHeads}`}
@@ -227,7 +231,7 @@ export function Visualizer() {
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
           <div className="flex flex-col gap-2.5">
-            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent-ink">
               {t("stepOf", { n: step + 1, total: STEPS.length })}
             </span>
             <h1 className="m-0 font-display text-[28px] font-semibold leading-tight md:text-[34px]">{meta.title}</h1>
@@ -238,7 +242,7 @@ export function Visualizer() {
             <p className="m-0 max-w-[720px] text-base text-ink-soft">{pick(lang, meta.explain)}</p>
           </div>
 
-          <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#FAFBFC] p-3 md:p-6">
+          <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-panel p-3 md:p-6">
             <HoverContext.Provider value={hover}>
               <StepView step={step} trace={trace} focus={focus} onFocus={setFocusChoice} />
             </HoverContext.Provider>
@@ -252,7 +256,7 @@ export function Visualizer() {
               type="button"
               onClick={() => goTo(Math.max(0, step - 1))}
               disabled={step === 0}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] border border-line-strong bg-white px-4.5 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-4.5 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5" />

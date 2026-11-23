@@ -52,7 +52,7 @@ export function Gpt2Explorer() {
   }, [slug]);
 
   if (error) {
-    return <p className="m-0 text-sm text-[#B42318]">{t("gptError", { e: error })}</p>;
+    return <p className="m-0 text-sm text-danger">{t("gptError", { e: error })}</p>;
   }
   if (!index || !data || !pair) {
     return <p className="m-0 text-sm text-muted">{t("gptLoading")}</p>;
@@ -95,7 +95,7 @@ export function Gpt2Explorer() {
             onClick={() => setSlug(p.slug)}
             aria-pressed={p.slug === slug}
             className={`min-h-9 cursor-pointer rounded-full border px-3 py-1 font-mono text-xs ${
-              p.slug === slug ? "border-ink bg-ink text-white" : "border-line bg-canvas text-ink-soft hover:border-line-strong"
+              p.slug === slug ? "border-ink bg-ink text-on-ink" : "border-line bg-canvas text-ink-soft hover:border-line-strong"
             }`}
           >
             {p.text}
@@ -143,7 +143,7 @@ export function Gpt2Explorer() {
           </section>
 
           {/* What to look for */}
-          <section className="flex flex-col gap-3 rounded-xl border border-line bg-[#FAFBFC] p-4">
+          <section className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
             <h2 className="m-0 font-display text-xl font-semibold">{t("gptLookTitle")}</h2>
             <p className="m-0 text-[15px] text-ink">{lang === "en" ? data.noteEn : data.note}</p>
             <div className="flex flex-wrap items-center gap-2">
@@ -159,7 +159,7 @@ export function Gpt2Explorer() {
                     setHead(h.head);
                     setPair({ q: data.highlight.query, t: data.highlight.target });
                   }}
-                  className="min-h-9 cursor-pointer rounded-lg border border-accent-line bg-white px-2.5 font-mono text-xs text-accent-ink hover:bg-accent-soft"
+                  className="min-h-9 cursor-pointer rounded-lg border border-accent-line bg-surface px-2.5 font-mono text-xs text-accent-ink hover:bg-accent-soft"
                 >
                   {label(h.layer, h.head)} · {h.weight.toFixed(2)}
                 </button>
@@ -203,7 +203,7 @@ export function Gpt2Explorer() {
                             className="h-7 w-7 cursor-pointer rounded border-0 p-0"
                             style={{
                               ...weightStyle(w),
-                              outline: selected ? "2px solid #14161C" : undefined,
+                              outline: selected ? "2px solid var(--color-ink)" : undefined,
                               outlineOffset: 1,
                             }}
                           />
@@ -262,7 +262,7 @@ export function Gpt2Explorer() {
                               className="flex h-8 w-10 items-center justify-center rounded border-0 p-0 font-mono text-[10px] text-ink enabled:cursor-pointer"
                               style={{
                                 ...(masked ? MASKED_STYLE : weightStyle(w)),
-                                outline: selected ? "2px solid #14161C" : undefined,
+                                outline: selected ? "2px solid var(--color-ink)" : undefined,
                                 outlineOffset: 1,
                               }}
                             >
@@ -294,7 +294,7 @@ export function Gpt2Explorer() {
                   >
                     {showToken(p.text)}
                   </span>
-                  <div className="h-6 flex-1 overflow-hidden rounded-md bg-[#EEF0F4]">
+                  <div className="h-6 flex-1 overflow-hidden rounded-md bg-track">
                     <motion.div
                       className="h-full rounded-md"
                       initial={{ width: "0%" }}

@@ -50,17 +50,17 @@ export function StepRail({ current, onSelect }: StepRailProps) {
               isCurrent
                 ? "bg-accent font-semibold text-white"
                 : isDone
-                  ? "border border-line bg-white text-ink md:border-0 md:bg-transparent md:hover:bg-white"
-                  : "border border-line bg-white text-muted md:border-0 md:bg-transparent md:hover:bg-white"
+                  ? "border border-line bg-surface text-ink md:border-0 md:bg-transparent md:hover:bg-surface"
+                  : "border border-line bg-surface text-muted md:border-0 md:bg-transparent md:hover:bg-surface"
             }`}
           >
             <span
               className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
                 isCurrent
-                  ? "bg-white text-accent"
+                  ? "bg-surface text-accent-ink"
                   : isDone
-                    ? "bg-[#E4E7FB] text-accent-ink"
-                    : "text-muted shadow-[inset_0_0_0_1.5px_#C5CAD4]"
+                    ? "bg-accent-soft text-accent-ink"
+                    : "text-muted shadow-[inset_0_0_0_1.5px_var(--color-line-strong)]"
               }`}
             >
               {i + 1}

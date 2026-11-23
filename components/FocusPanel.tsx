@@ -32,7 +32,7 @@ export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown 
   const disagree = multi && new Set(summaries.map((s) => s.top)).size > 1;
 
   return (
-    <div className="flex flex-col gap-3 rounded-[10px] border border-line bg-white p-4">
+    <div className="flex flex-col gap-3 rounded-[10px] border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="pr-1 text-[13px] font-semibold text-ink-soft">{t("pickToken")}</span>
         {tokens.map((tok, i) => (
@@ -42,7 +42,7 @@ export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown 
             onClick={() => onFocus(i)}
             aria-pressed={i === focus}
             className={`min-h-9 cursor-pointer rounded-full border px-3 py-1 font-mono text-xs ${
-              i === focus ? "border-ink bg-ink text-white" : "border-line-strong bg-white text-ink"
+              i === focus ? "border-ink bg-ink text-on-ink" : "border-line-strong bg-surface text-ink"
             }`}
           >
             {i + 1}.{tok}

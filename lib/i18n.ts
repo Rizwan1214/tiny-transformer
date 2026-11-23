@@ -31,6 +31,8 @@ export const STRINGS = {
   stepOf: same("Step {n} / {total}"),
   pipeline: same("Pipeline"),
   language: same("Language"),
+  themeToDark: { ur: "Dark mode on karo", en: "Switch to dark mode" },
+  themeToLight: { ur: "Light mode on karo", en: "Switch to light mode" },
 
   // Step visuals
   positive: same("positive"),

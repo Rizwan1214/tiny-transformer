@@ -8,6 +8,8 @@ Type a sentence and walk through every stage, from tokenization to next-token pr
 - Every step animates in, so equations like `E + PE = X` build left to right.
 - **Real GPT-2 mode** shows the trained GPT-2 small (124M): real BPE tokens, all 144 attention heads,
   and its actual next-token predictions for a set of example sentences.
+- **Roman Urdu or English** for every label and explanation, plus **light and dark themes**
+  (follows the system until you pick one). Works on phones.
 
 ## The 10 steps
 
@@ -34,6 +36,12 @@ npm run dev
 
 Then open http://localhost:3000.
 
+Run the tests (the transformer math and the cell explanations):
+
+```bash
+npm test
+```
+
 ## Real GPT-2 data
 
 The GPT-2 mode reads precomputed JSON from `public/gpt2/` (about 1.2 MB, committed), so the site
@@ -55,6 +63,7 @@ worth inspecting from the data itself.
 lib/transformer.ts   pure math: tokenize, embed, multi-head attention, softmax, layer norm, FFN
 lib/explain.ts       the arithmetic behind any cell, for the Calculation panel
 lib/gpt2.ts          types and loaders for the precomputed GPT-2 data
+lib/i18n.ts          Roman Urdu and English strings
 scripts/             export_gpt2.py, which produces public/gpt2/
 lib/steps.ts         title, formula and explanation for each step
 lib/colors.ts        cell colors (diverging for values, sequential for probabilities)
@@ -63,4 +72,4 @@ components/          Visualizer (state), StepView, MatrixGrid, AttentionHeatmap,
 
 ## Tech
 
-Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Motion.
+Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Motion, Vitest.

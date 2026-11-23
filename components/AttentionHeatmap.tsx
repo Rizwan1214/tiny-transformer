@@ -65,7 +65,7 @@ export function AttentionHeatmap({
                 onClick={() => onFocus(i)}
                 aria-pressed={selected}
                 className={`h-11 w-[88px] cursor-pointer truncate rounded-lg border px-2.5 text-left font-mono text-xs ${
-                  selected ? "border-ink bg-ink text-white" : "border-line bg-white text-ink"
+                  selected ? "border-ink bg-ink text-on-ink" : "border-line bg-surface text-ink"
                 }`}
               >
                 {i + 1}.{t}

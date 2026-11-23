@@ -19,10 +19,10 @@ export function useHover() {
 export function highlightStyle(h: HoverApi, key: CellKey, i: number, j: number, head?: number): CSSProperties {
   const a = h.active;
   if (a && a.key === key && a.i === i && a.j === j && a.head === head) {
-    return { outline: "2px solid #14161C", outlineOffset: 1, zIndex: 1 };
+    return { outline: "2px solid var(--color-ink)", outlineOffset: 1, zIndex: 1 };
   }
   if (isRelated(h.related, key, i, j, head)) {
-    return { outline: "2px dashed #3B4BD8", outlineOffset: 1 };
+    return { outline: "2px dashed var(--color-accent-ink)", outlineOffset: 1 };
   }
   return {};
 }
