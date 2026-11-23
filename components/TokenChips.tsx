@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react";
 import { MAX_TOKENS } from "@/lib/transformer";
+import { useLang } from "./lang";
 
 interface TokenChipsProps {
   tokens: string[];
@@ -12,6 +13,7 @@ const CHIP_STAGGER = 0.09;
 
 export function TokenChips({ tokens, ids }: TokenChipsProps) {
   const chipsDone = 0.35 + tokens.length * CHIP_STAGGER;
+  const { t } = useLang();
 
   return (
     <div className="flex flex-col gap-5">
@@ -59,9 +61,7 @@ export function TokenChips({ tokens, ids }: TokenChipsProps) {
         ))}
       </ol>
       <p className="m-0 text-[13px] text-muted">
-        {ids
-          ? "IDs ek 50,000 words wali vocabulary ke index hain (yahan hash se bane hain)."
-          : `${tokens.length} tokens (is demo mein max ${MAX_TOKENS})`}
+        {ids ? t("idsNote") : t("tokensCount", { n: tokens.length, max: MAX_TOKENS })}
       </p>
     </div>
   );

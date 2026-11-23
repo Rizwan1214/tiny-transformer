@@ -19,7 +19,10 @@ export interface Gpt2Prediction {
 export interface Gpt2Data {
   slug: string;
   text: string;
+  /** Roman Urdu note on what to look for. */
   note: string;
+  /** The same note in English. */
+  noteEn: string;
   tokens: { id: number; text: string }[];
   layers: number;
   heads: number;

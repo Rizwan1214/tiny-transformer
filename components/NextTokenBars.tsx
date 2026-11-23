@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { cellHandlers, highlightStyle, useHover } from "./hover";
+import { useLang } from "./lang";
 
 interface NextTokenBarsProps {
   tokens: string[];
@@ -13,6 +14,7 @@ const BAR_STAGGER = 0.07;
 
 export function NextTokenBars({ tokens, vocab, probs }: NextTokenBarsProps) {
   const hover = useHover();
+  const { t } = useLang();
   const ranked = vocab.map((word, i) => ({ word, p: probs[i], index: i })).sort((a, b) => b.p - a.p);
   const top = ranked[0];
   const barsDone = 0.2 + ranked.length * BAR_STAGGER + 0.4;
@@ -66,7 +68,7 @@ export function NextTokenBars({ tokens, vocab, probs }: NextTokenBarsProps) {
         ))}
       </ul>
       <p className="m-0 text-[13px] text-muted">
-        Weights random hain, is liye prediction bhi random hai. Training ke baad yahi bars sahi word ko upar le aate hain.
+        {t("randomNote")}
       </p>
     </div>
   );

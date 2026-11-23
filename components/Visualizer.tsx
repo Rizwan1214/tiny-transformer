@@ -1,17 +1,20 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { relatedCells, type CellRef } from "@/lib/explain";
+import { LANGS, pick, tr, type Lang } from "@/lib/i18n";
 import { STEPS } from "@/lib/steps";
 import { HEAD_OPTIONS, runTransformer, type HeadCount } from "@/lib/transformer";
 import { CalcPanel } from "./CalcPanel";
 import { Gpt2Explorer } from "./Gpt2Explorer";
 import { HoverContext } from "./hover";
+import { LangContext } from "./lang";
 import { StepRail } from "./StepRail";
 import { StepView } from "./StepView";
 
 const PRESETS = ["the cat sat on the mat", "i love cats", "main ghar ja raha hoon"];
+const LANG_KEY = "tiny-transformer:lang";
 
 export function Visualizer() {
   const [text, setText] = useState(PRESETS[0]);
@@ -21,6 +24,31 @@ export function Visualizer() {
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
   const [numHeads, setNumHeads] = useState<HeadCount>(1);
   const [mode, setMode] = useState<"toy" | "gpt2">("toy");
+  const [lang, setLang] = useState<Lang>("ur");
+  const t = (key: Parameters<typeof tr>[1], vars?: Record<string, string | number>) => tr(lang, key, vars);
+
+  // Restore the viewer's language after hydration (server render is always Roman Urdu).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === "en" || saved === "ur") setLang(saved);
+    } catch {
+      // storage blocked: keep the default
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "ur" ? "ur-Latn" : "en";
+  }, [lang]);
+
+  const changeLang = (next: Lang) => {
+    setLang(next);
+    try {
+      localStorage.setItem(LANG_KEY, next);
+    } catch {
+      // storage blocked: the choice lasts for this visit only
+    }
+  };
 
   const trace = useMemo(() => runTransformer(text, causalMask, numHeads), [text, causalMask, numHeads]);
   const n = trace.tokens.length;
@@ -53,6 +81,7 @@ export function Visualizer() {
   };
 
   return (
+    <LangContext.Provider value={lang}>
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-canvas text-ink">
       <header className="border-b border-line bg-white">
@@ -69,15 +98,15 @@ export function Visualizer() {
             </div>
             <div className="flex flex-col">
               <span className="font-display text-lg font-bold leading-tight">Tiny Transformer</span>
-              <span className="hidden text-xs text-muted sm:block">Har step screen par, live math ke saath</span>
+              <span className="hidden text-xs text-muted sm:block">{t("tagline")}</span>
             </div>
           </div>
 
           <div role="group" aria-label="Model" className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
             {(
               [
-                ["toy", "Toy model"],
-                ["gpt2", "Real GPT-2"],
+                ["toy", t("modeToy")],
+                ["gpt2", t("modeGpt2")],
               ] as const
             ).map(([value, name]) => (
               <button
@@ -99,7 +128,7 @@ export function Visualizer() {
           <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               <label htmlFor="sentence" className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">
-                Sentence
+                {t("sentence")}
               </label>
               <input
                 id="sentence"
@@ -110,7 +139,7 @@ export function Visualizer() {
               />
             </div>
             <div className="-mx-3 flex items-center gap-1.5 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-              <span className="shrink-0 text-xs text-muted">Try:</span>
+              <span className="shrink-0 text-xs text-muted">{t("try")}</span>
               {PRESETS.map((p) => (
                 <button
                   key={p}
@@ -127,7 +156,7 @@ export function Visualizer() {
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className="hidden rounded-lg border border-line bg-canvas px-2.5 py-1.5 font-mono text-xs text-ink-soft sm:inline">d_model = 4</span>
             <div role="group" aria-label="Attention heads" className="flex items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
-              <span className="px-1.5 font-mono text-xs text-ink-soft">heads</span>
+              <span className="px-1.5 font-mono text-xs text-ink-soft">{t("heads")}</span>
               {HEAD_OPTIONS.map((h) => (
                 <button
                   key={h}
@@ -150,11 +179,30 @@ export function Visualizer() {
                 causalMask ? "border-ink bg-ink text-white" : "border-line-strong bg-white text-ink"
               }`}
             >
-              Causal mask: {causalMask ? "On" : "Off"}
+              <span className="sm:hidden">Mask: {causalMask ? t("on") : t("off")}</span>
+              <span className="hidden sm:inline">{t("mask", { state: causalMask ? t("on") : t("off") })}</span>
             </button>
           </div>
           </>
           )}
+
+          <div role="group" aria-label={t("language")} className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
+            {LANGS.map((l) => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => changeLang(l.value)}
+                aria-pressed={lang === l.value}
+                aria-label={l.name}
+                title={l.name}
+                className={`h-9 min-w-9 cursor-pointer rounded-lg px-2 font-mono text-xs font-semibold ${
+                  lang === l.value ? "bg-ink text-white" : "text-ink hover:bg-white"
+                }`}
+              >
+                {l.short}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -180,14 +228,14 @@ export function Visualizer() {
           >
           <div className="flex flex-col gap-2.5">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
-              Step {step + 1} / {STEPS.length}
+              {t("stepOf", { n: step + 1, total: STEPS.length })}
             </span>
             <h1 className="m-0 font-display text-[28px] font-semibold leading-tight md:text-[34px]">{meta.title}</h1>
             <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-lg bg-accent-soft px-3 py-1.5 font-mono text-sm text-accent-ink">{meta.formula}</code>
-              <span className="font-mono text-xs text-muted">{meta.shape}</span>
+              <code className="rounded-lg bg-accent-soft px-3 py-1.5 font-mono text-sm text-accent-ink">{pick(lang, meta.formula)}</code>
+              <span className="font-mono text-xs text-muted">{pick(lang, meta.shape)}</span>
             </div>
-            <p className="m-0 max-w-[720px] text-base text-ink-soft">{meta.explain}</p>
+            <p className="m-0 max-w-[720px] text-base text-ink-soft">{pick(lang, meta.explain)}</p>
           </div>
 
           <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#FAFBFC] p-3 md:p-6">
@@ -210,7 +258,7 @@ export function Visualizer() {
                 <path d="M19 12H5" />
                 <path d="m11 6-6 6 6 6" />
               </svg>
-              Back
+              {t("back")}
             </button>
             <div className="flex flex-[1_1_160px] flex-col gap-1.5">
               <div className="h-1.5 overflow-hidden rounded-full bg-line">
@@ -219,16 +267,14 @@ export function Visualizer() {
                   style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
                 />
               </div>
-              <span className="text-xs text-muted">
-                Step {step + 1} / {STEPS.length}
-              </span>
+              <span className="text-xs text-muted">{t("stepOf", { n: step + 1, total: STEPS.length })}</span>
             </div>
             <button
               type="button"
               onClick={() => goTo(isLast ? 0 : step + 1)}
               className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] bg-accent px-4.5 text-sm font-semibold text-white hover:bg-accent-ink"
             >
-              {isLast ? "Shuru se dobara" : `Next: ${STEPS[step + 1].title}`}
+              {isLast ? t("restart") : t("next", { title: STEPS[step + 1].title })}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14" />
                 <path d="m13 6 6 6-6 6" />
@@ -240,5 +286,6 @@ export function Visualizer() {
       )}
     </div>
     </MotionConfig>
+    </LangContext.Provider>
   );
 }

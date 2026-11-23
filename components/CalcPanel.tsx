@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { explainCell, type CellRef } from "@/lib/explain";
 import type { TransformerTrace } from "@/lib/transformer";
+import { useLang } from "./lang";
 
 interface CalcPanelProps {
   trace: TransformerTrace;
@@ -11,20 +12,21 @@ interface CalcPanelProps {
 
 /** Shows the arithmetic behind whichever cell the viewer last pointed at. */
 export function CalcPanel({ trace, active }: CalcPanelProps) {
+  const { lang, t } = useLang();
   if (!active) {
     return (
       <div className="rounded-[10px] border border-dashed border-line-strong bg-white px-4 py-3 text-[13px] text-muted">
-        Kisi bhi number par hover karo (phone par tap) aur yahan uska poora hisaab dikhega.
+        {t("calcHint")}
       </div>
     );
   }
 
-  const { title, lines, result } = explainCell(trace, active);
+  const { title, lines, result } = explainCell(trace, active, lang);
 
   return (
     <div aria-live="polite" className="flex flex-col gap-2 rounded-[10px] border border-line bg-white p-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">Calculation</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">{t("calcLabel")}</span>
         <span className="font-mono text-sm font-bold text-ink">{title}</span>
       </div>
       <div className="overflow-x-auto">

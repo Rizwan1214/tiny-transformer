@@ -1,6 +1,7 @@
 // Turns "which cell is the viewer pointing at?" into the exact arithmetic
 // that produced it, using the numbers already stored in the trace.
 
+import { tr, type Lang } from "./i18n";
 import { D_MODEL, LOGIT_SCALE, WEIGHTS, embed, type Matrix, type TransformerTrace } from "./transformer";
 
 // Per-head cells carry `head` (0-based); titles show it as a subscript (S₁, S₂).
@@ -50,8 +51,9 @@ function layerNormLines(rowName: string, r: number[], j: number): string[] {
   ];
 }
 
-export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
+export function explainCell(t: TransformerTrace, ref: CellRef, lang: Lang = "ur"): Explanation {
   const { i, j } = ref;
+  const L = (key: Parameters<typeof tr>[1], vars?: Record<string, string | number>) => tr(lang, key, vars);
   const tok = (k: number) => `${k + 1}.${t.tokens[k]}`;
   const h = ref.head ?? 0;
   const hd = t.heads[h];
@@ -105,7 +107,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
         lines: [
           `X[${tok(i)}] · W_${ref.key}[:, ${fullJ}]`,
           `= ${dotTerms(t.X[i], col(W, fullJ))}`,
-          ...(multi ? [`(column d${fullJ} head ${headOf} ka hissa hai)`] : []),
+          ...(multi ? [L("columnOfHead", { c: fullJ, h: headOf })] : []),
         ],
         result: f(t[ref.key][i][fullJ]),
       };
@@ -116,7 +118,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
       if (s === null) {
         return {
           title: `${sub("S")}[${tok(i)} → ${tok(j)}]`,
-          lines: [`Key position ${j + 1} > query position ${i + 1}`, `Future token, causal mask laga diya`],
+          lines: [L("keyAfterQuery", { k: j + 1, q: i + 1 }), L("maskedFuture")],
           result: "−∞",
         };
       }
@@ -136,7 +138,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
       if (hd.S[i][j] === null) {
         return {
           title: `${sub("A")}[${tok(i)} → ${tok(j)}]`,
-          lines: [`S = −∞, aur e^(−∞) = 0`],
+          lines: [L("expZero")],
           result: "0.00",
         };
       }
@@ -149,7 +151,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
         title: `${sub("A")}[${tok(i)} → ${tok(j)}]`,
         lines: [
           `e^S[${tok(i)}, ${tok(j)}] / Σ e^S[${tok(i)}, k]`,
-          `(stable softmax: har score se row ka max ${f(max)} minus kiya)`,
+          L("stableSoftmax", { m: f(max) }),
           `= ${exps[j].toFixed(3)} / (${exps.filter((_, k) => row[k] !== null).map((e) => e.toFixed(3)).join(" + ")})`,
           `= ${exps[j].toFixed(3)} / ${sum.toFixed(3)}`,
         ],
@@ -175,10 +177,10 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
         lines: multi
           ? [
               `Concat = [${t.heads.map((_, k) => `Z${"₁₂₃₄"[k]}`).join(" | ")}]`,
-              `Column d${j} → head ${fromHead + 1} ka column ${inHead}`,
+              L("concatColumn", { j, h: fromHead + 1, c: inHead }),
               `= Z${"₁₂₃₄"[fromHead]}[${tok(i)}, ${inHead}]`,
             ]
-          : [`Ek hi head hai, is liye Concat = Z`, `= Z[${tok(i)}, ${j}]`],
+          : [L("concatSingle"), `= Z[${tok(i)}, ${j}]`],
         result: f(t.C[i][j]),
       };
     }
@@ -189,7 +191,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
         lines: [
           `Concat[${tok(i)}] · W_O[:, ${j}]`,
           `= ${dotTerms(t.C[i], col(WEIGHTS.Wo, j))}`,
-          ...(multi ? [`(W_O sab heads ki info ko aapas mein mix karta hai)`] : []),
+          ...(multi ? [L("woMix")] : []),
         ],
         result: f(t.O[i][j]),
       };
@@ -205,7 +207,7 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
       return {
         title: `FFN(Y)[${tok(i)}, d${j}]`,
         lines: [
-          `h = ReLU(Y[${tok(i)}] · W1)   (4 → 8, negative values 0 ho jati hain)`,
+          L("ffnHidden", { tok: tok(i) }),
           `h = [${t.hidden[i].map(f).join(", ")}]`,
           `h · W2[:, ${j}] = ${dotTerms(t.hidden[i], col(WEIGHTS.W2, j))}`,
         ],

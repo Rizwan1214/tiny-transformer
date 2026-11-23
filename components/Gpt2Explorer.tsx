@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { MASKED_STYLE } from "@/lib/colors";
 import { loadIndex, loadPreset, showToken, type Gpt2Data, type Gpt2Index } from "@/lib/gpt2";
+import { useLang } from "./lang";
 
 /** Blue with strength ∝ weight; alpha capped so dark text stays readable. */
 function weightStyle(w: number): React.CSSProperties {
@@ -20,6 +21,7 @@ export function Gpt2Explorer() {
   const [layer, setLayer] = useState(0);
   const [head, setHead] = useState(0);
   const [pair, setPair] = useState<Pair | null>(null);
+  const { lang, t } = useLang();
 
   useEffect(() => {
     loadIndex()
@@ -50,10 +52,10 @@ export function Gpt2Explorer() {
   }, [slug]);
 
   if (error) {
-    return <p className="m-0 text-sm text-[#B42318]">GPT-2 data load nahi hua: {error}</p>;
+    return <p className="m-0 text-sm text-[#B42318]">{t("gptError", { e: error })}</p>;
   }
   if (!index || !data || !pair) {
-    return <p className="m-0 text-sm text-muted">GPT-2 data load ho raha hai…</p>;
+    return <p className="m-0 text-sm text-muted">{t("gptLoading")}</p>;
   }
 
   const tokens = data.tokens.map((t) => showToken(t.text));
@@ -78,14 +80,14 @@ export function Gpt2Explorer() {
         ))}
       </div>
       <p className="m-0 max-w-[760px] text-[15px] text-ink-soft">
-        Ye asli, trained GPT-2 hai. Iske numbers pehle se nikale gaye hain (
-        <code className="font-mono text-[13px]">scripts/export_gpt2.py</code>), is liye sirf neeche wale sentences chalte
-        hain. 768 dimensions screen par nahi aa sakte, is liye yahan tokens, attention aur predictions dikhaye gaye hain.
+        {t("gptIntroBefore")}
+        <code className="font-mono text-[13px]">scripts/export_gpt2.py</code>
+        {t("gptIntroAfter")}
       </p>
 
       {/* Sentence picker */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="pr-1 text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">Sentence</span>
+        <span className="pr-1 text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">{t("sentence")}</span>
         {index.presets.map((p) => (
           <button
             key={p.slug}
@@ -112,13 +114,12 @@ export function Gpt2Explorer() {
         >
           {/* Tokens + what GPT-2 expected after each one */}
           <section className="flex flex-col gap-3">
-            <h2 className="m-0 font-display text-xl font-semibold">1. BPE tokens</h2>
+            <h2 className="m-0 font-display text-xl font-semibold">{t("gptTokensTitle")}</h2>
             <p className="m-0 text-[13px] text-muted">
-              · ka matlab hai token ke shuru mein space hai. Har token ke neeche: uska ID, aur us jagah GPT-2 ne agla token kya
-              socha tha.
+              {t("gptTokensHelp")}
             </p>
             <ol className="m-0 flex list-none flex-wrap gap-2.5 p-0">
-              {data.tokens.map((t, i) => {
+              {data.tokens.map((tok, i) => {
                 const guess = data.positionTop[i][0];
                 return (
                   <motion.li
@@ -131,8 +132,8 @@ export function Gpt2Explorer() {
                     <span className="rounded-[10px] border border-accent-line bg-accent-soft px-3 py-2 font-mono text-sm text-ink">
                       {tokens[i]}
                     </span>
-                    <span className="font-mono text-[11px] text-accent-ink">{t.id}</span>
-                    <span className="font-mono text-[11px] text-muted" title="GPT-2 ka is position par agla guess">
+                    <span className="font-mono text-[11px] text-accent-ink">{tok.id}</span>
+                    <span className="font-mono text-[11px] text-muted" title={t("gptGuessTitle")}>
                       → {showToken(guess.text)} {Math.round(guess.p * 100)}%
                     </span>
                   </motion.li>
@@ -143,11 +144,11 @@ export function Gpt2Explorer() {
 
           {/* What to look for */}
           <section className="flex flex-col gap-3 rounded-xl border border-line bg-[#FAFBFC] p-4">
-            <h2 className="m-0 font-display text-xl font-semibold">2. Kya dekhna hai</h2>
-            <p className="m-0 text-[15px] text-ink">{data.note}</p>
+            <h2 className="m-0 font-display text-xl font-semibold">{t("gptLookTitle")}</h2>
+            <p className="m-0 text-[15px] text-ink">{lang === "en" ? data.noteEn : data.note}</p>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[13px] text-ink-soft">
-                “{tokens[data.highlight.query]}” → “{tokens[data.highlight.target]}” sab se zyada dekhne wale heads:
+                {t("gptTopHeads", { q: tokens[data.highlight.query], t: tokens[data.highlight.target] })}
               </span>
               {data.highlight.topHeads.map((h) => (
                 <button
@@ -168,11 +169,9 @@ export function Gpt2Explorer() {
 
           {/* Head map + selected head's attention */}
           <section className="flex flex-col gap-3">
-            <h2 className="m-0 font-display text-xl font-semibold">3. Attention: 144 heads</h2>
+            <h2 className="m-0 font-display text-xl font-semibold">{t("gptAttentionTitle")}</h2>
             <p className="m-0 max-w-[760px] text-[13px] text-muted">
-              Bayen wala grid har layer aur head ke liye batata hai ke “{tokens[pair.q]}” kitna “{tokens[pair.t]}” ko dekh
-              raha hai. Kisi head par click karo to dayen uska poora attention map khulega. Map mein kisi cell par click karo
-              to woh token pair chun liya jayega.
+              {t("gptHeadMapHelp", { q: tokens[pair.q], t: tokens[pair.t] })}
             </p>
             <div className="flex flex-wrap items-start gap-8">
               <div className="overflow-x-auto">
@@ -275,14 +274,14 @@ export function Gpt2Explorer() {
                     ))}
                   </motion.div>
                 </div>
-                <p className="m-0 text-xs text-muted">Rows = Queries, columns = Keys. Values .xx = 0.xx</p>
+                <p className="m-0 text-xs text-muted">{t("gptMapAxes")}</p>
               </div>
             </div>
           </section>
 
           {/* Real next-token prediction */}
           <section className="flex flex-col gap-3">
-            <h2 className="m-0 font-display text-xl font-semibold">4. Agla token</h2>
+            <h2 className="m-0 font-display text-xl font-semibold">{t("gptNextTitle")}</h2>
             <p className="m-0 font-display text-2xl text-ink">
               “{data.text}” <span className="text-muted">→</span>{" "}
               <span className="rounded-lg bg-accent px-2.5 py-0.5 text-white">{showToken(top.text)}</span>
@@ -309,8 +308,7 @@ export function Gpt2Explorer() {
               ))}
             </ul>
             <p className="m-0 text-[13px] text-muted">
-              Ye 50,257 words ki vocabulary mein se top 10 hain. Toy model ke ulat, ye weights trained hain, is liye predictions
-              matlab rakhti hain.
+              {t("gptVocabNote")}
             </p>
           </section>
         </motion.div>

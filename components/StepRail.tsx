@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { STEPS } from "@/lib/steps";
+import { useLang } from "./lang";
 
 interface StepRailProps {
   current: number;
@@ -13,20 +14,27 @@ interface StepRailProps {
  * scrolling strip of pills on phones so the step content stays near the top.
  */
 export function StepRail({ current, onSelect }: StepRailProps) {
+  const navRef = useRef<HTMLElement>(null);
   const currentRef = useRef<HTMLButtonElement>(null);
+  const { t } = useLang();
 
-  // Keep the active pill visible when the strip scrolls sideways on phones.
+  // On phones, slide the strip so the active pill is centred. Only the strip
+  // scrolls (never the page), and on wide screens nothing overflows so this is a no-op.
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const nav = navRef.current;
+    const btn = currentRef.current;
+    if (!nav || !btn || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollTo({ left: btn.offsetLeft - nav.clientWidth / 2 + btn.offsetWidth / 2, behavior: "smooth" });
   }, [current]);
 
   return (
     <nav
+      ref={navRef}
       aria-label="Transformer steps"
-      className="-mx-3 flex w-[calc(100%+1.5rem)] gap-1 overflow-x-auto px-3 pb-1 md:mx-0 md:w-auto md:max-w-full md:flex-[1_1_240px] md:flex-col md:overflow-visible md:px-0 md:pb-0"
+      className="relative -mx-3 flex w-[calc(100%+1.5rem)] gap-1 overflow-x-auto px-3 pb-1 md:mx-0 md:w-auto md:max-w-full md:flex-[1_1_240px] md:flex-col md:overflow-visible md:px-0 md:pb-0"
     >
       <span className="hidden px-3 pb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted md:block">
-        Pipeline
+        {t("pipeline")}
       </span>
       {STEPS.map((s, i) => {
         const isCurrent = i === current;

@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { MASKED_STYLE, maxAbs, probStyle, valueStyle } from "@/lib/colors";
 import { argmax, type MaskedMatrix, type Matrix } from "@/lib/transformer";
 import { cellHandlers, highlightStyle, useHover } from "./hover";
+import { useLang } from "./lang";
 
 /** Rows sweep in top to bottom, each cell a beat after its left neighbour. */
 const HEAT_ROW = 0.09;
@@ -38,13 +39,14 @@ export function AttentionHeatmap({
 }: AttentionHeatmapProps) {
   const max = maxAbs(scores);
   const hover = useHover();
+  const { t } = useLang();
   const cellKey = mode === "softmax" ? "A" : "S";
 
   return (
     <div className="min-w-0 max-w-full overflow-x-auto">
       <div className="flex w-max flex-col gap-1">
         {title && <div className="pb-1 font-mono text-sm font-bold text-ink">{title}</div>}
-        <div className="pl-[92px] text-xs text-muted">Keys (kis ko dekha ja raha hai) →</div>
+        <div className="pl-[92px] text-xs text-muted">{t("keysAxis")}</div>
         <div className="flex gap-1 pl-[92px]">
           {tokens.map((t, j) => (
             <span key={j} className="w-16 text-center font-mono text-xs text-ink-soft">

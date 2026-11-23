@@ -3,6 +3,7 @@ import { AttentionHeatmap } from "./AttentionHeatmap";
 import { FocusPanel } from "./FocusPanel";
 import { MatrixGrid, MatrixRow, Operator } from "./MatrixGrid";
 import { NextTokenBars } from "./NextTokenBars";
+import { useLang } from "./lang";
 import { TokenChips } from "./TokenChips";
 
 interface StepViewProps {
@@ -17,15 +18,16 @@ const SUB = "₁₂₃₄";
 const HEAD_GAP = 0.6;
 
 function Legend() {
+  const { t } = useLang();
   return (
     <div className="flex flex-wrap items-center gap-4 text-xs text-ink-soft">
       <span className="flex items-center gap-1.5">
-        <span className="h-3.5 w-3.5 rounded bg-[rgba(59,75,216,0.6)]" /> positive
+        <span className="h-3.5 w-3.5 rounded bg-[rgba(59,75,216,0.6)]" /> {t("positive")}
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="h-3.5 w-3.5 rounded bg-[rgba(217,72,15,0.6)]" /> negative
+        <span className="h-3.5 w-3.5 rounded bg-[rgba(217,72,15,0.6)]" /> {t("negative")}
       </span>
-      <span className="text-muted">Rang jitna gehra, number utna bara</span>
+      <span className="text-muted">{t("legendNote")}</span>
     </div>
   );
 }
@@ -37,6 +39,7 @@ function Note({ children }: { children: React.ReactNode }) {
 /** Renders the visualization for one pipeline step. */
 export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
   const { tokens, heads, dHead } = trace;
+  const { t } = useLang();
   const multi = heads.length > 1;
   const rows = tokens.map((t, i) => `${i + 1}.${t}`);
   const dims = Array.from({ length: 4 }, (_, j) => `d${j}`);
@@ -85,8 +88,11 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
           </MatrixRow>
           {multi && (
             <Note>
-              {heads.length} heads: har head ko {dHead} columns milte hain ({heads.map((_, h) => `head ${h + 1} = ${headRange(h)}`).join(", ")}).
-              Har head apne hisse se alag attention nikalta hai.
+              {t("headsNote", {
+                count: heads.length,
+                dHead,
+                ranges: heads.map((_, h) => `head ${h + 1} = ${headRange(h)}`).join(", "),
+              })}
             </Note>
           )}
         </>
@@ -102,7 +108,7 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
               <AttentionHeatmap
                 key={h}
                 head={h}
-                title={multi ? `Head ${h + 1}  (${headRange(h)}, √${dHead})` : undefined}
+                title={multi ? `${t("headTitle", { n: h + 1 })}  (${headRange(h)}, √${dHead})` : undefined}
                 startDelay={h * HEAD_GAP}
                 tokens={tokens}
                 scores={hd.S}
@@ -113,7 +119,7 @@ export function StepView({ step, trace, focus, onFocus }: StepViewProps) {
               />
             ))}
           </div>
-          <Note>Rows = Queries (kaun dekh raha hai). Kisi row ke naam par click karo.</Note>
+          <Note>{t("rowsNote")}</Note>
           {step === 6 && (
             <FocusPanel tokens={tokens} headWeights={headWeights} focus={focus} onFocus={onFocus} showBreakdown={false} />
           )}

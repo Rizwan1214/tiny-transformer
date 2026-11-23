@@ -1,4 +1,5 @@
 import { argmax, type Matrix } from "@/lib/transformer";
+import { useLang } from "./lang";
 
 interface FocusPanelProps {
   tokens: string[];
@@ -12,8 +13,9 @@ interface FocusPanelProps {
 const SUB = "₁₂₃₄";
 
 export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown }: FocusPanelProps) {
+  const { t } = useLang();
   const multi = headWeights.length > 1;
-  const name = (h: number) => (multi ? `Head ${h + 1}` : "");
+  const name = (h: number) => (multi ? t("headTitle", { n: h + 1 }) : "");
 
   const summaries = headWeights.map((weights, h) => {
     const row = weights[focus];
@@ -32,8 +34,8 @@ export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown 
   return (
     <div className="flex flex-col gap-3 rounded-[10px] border border-line bg-white p-4">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="pr-1 text-[13px] font-semibold text-ink-soft">Token chuno:</span>
-        {tokens.map((t, i) => (
+        <span className="pr-1 text-[13px] font-semibold text-ink-soft">{t("pickToken")}</span>
+        {tokens.map((tok, i) => (
           <button
             key={i}
             type="button"
@@ -43,7 +45,7 @@ export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown 
               i === focus ? "border-ink bg-ink text-white" : "border-line-strong bg-white text-ink"
             }`}
           >
-            {i + 1}.{t}
+            {i + 1}.{tok}
           </button>
         ))}
       </div>
@@ -52,17 +54,14 @@ export function FocusPanel({ tokens, headWeights, focus, onFocus, showBreakdown 
         {summaries.map(({ h, top, weight }) => (
           <li key={h} className="text-[15px] text-ink">
             {multi && <span className="mr-2 font-mono text-xs font-bold text-accent-ink">{name(h)}:</span>}
-            “{tokens[focus]}” sab se zyada “{tokens[top]}” (position {top + 1}) ko dekh raha hai, weight{" "}
-            {weight.toFixed(2)}.
+            {t("focusLine", { q: tokens[focus], t: tokens[top], pos: top + 1, w: weight.toFixed(2) })}
           </li>
         ))}
       </ul>
 
       {multi && (
         <p className="m-0 text-[13px] text-muted">
-          {disagree
-            ? "Dono heads alag tokens par focus kar rahe hain. Yahi multi-head ka faida hai: har head alag rishta pakad sakta hai."
-            : "Is token ke liye dono heads ek hi token ko dekh rahe hain. Doosra token chuno, shayad wahan farq dikhe."}
+          {disagree ? t("headsDisagree") : t("headsAgree")}
         </p>
       )}
 
