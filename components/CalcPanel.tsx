@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "motion/react";
 import { explainCell, type CellRef } from "@/lib/explain";
 import type { TransformerTrace } from "@/lib/transformer";
 
@@ -25,13 +28,19 @@ export function CalcPanel({ trace, active }: CalcPanelProps) {
         <span className="font-mono text-sm font-bold text-ink">{title}</span>
       </div>
       <div className="overflow-x-auto">
-        <div className="flex w-max min-w-full flex-col gap-1 font-mono text-[13px] text-ink-soft">
-          {lines.map((line, k) => (
-            <span key={k} className="whitespace-nowrap">
+        {/* Re-keyed per cell so each new calculation writes itself out line by line. */}
+        <div key={title} className="flex w-max min-w-full flex-col gap-1 font-mono text-[13px] text-ink-soft">
+          {[...lines, `= ${result}`].map((line, k) => (
+            <motion.span
+              key={k}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: k * 0.06, duration: 0.18 }}
+              className={`whitespace-nowrap ${k === lines.length ? "font-bold text-accent-ink" : ""}`}
+            >
               {line}
-            </span>
+            </motion.span>
           ))}
-          <span className="whitespace-nowrap font-bold text-accent-ink">= {result}</span>
         </div>
       </div>
     </div>

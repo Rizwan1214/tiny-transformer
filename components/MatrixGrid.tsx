@@ -1,7 +1,12 @@
+"use client";
+
+import { motion } from "motion/react";
+import { Children } from "react";
 import { MASKED_STYLE, maxAbs, probStyle, valueStyle } from "@/lib/colors";
 import type { CellKey } from "@/lib/explain";
 import { argmax, type MaskedMatrix } from "@/lib/transformer";
 import { cellHandlers, highlightStyle, useHover } from "./hover";
+import { CELL_STAGGER, ROW_STAGGER, SequenceDelay, useSequenceDelay } from "./sequence";
 
 interface MatrixGridProps {
   label: string;
@@ -26,6 +31,7 @@ export function MatrixGrid({
   cellKey,
 }: MatrixGridProps) {
   const hover = useHover();
+  const start = useSequenceDelay();
   const cols = colLabels ?? matrix[0].map((_, j) => `d${j}`);
   const max = maxAbs(matrix);
 
@@ -60,16 +66,24 @@ export function MatrixGrid({
                     ? probStyle(v as number, j === rowMax)
                     : valueStyle(v as number, max);
                 return (
-                  <span
+                  <motion.span
                     key={j}
-                    className={`relative flex h-[34px] w-14 items-center justify-center rounded-md font-mono text-xs font-medium text-ink ${
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      delay: start + i * ROW_STAGGER + j * CELL_STAGGER,
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 28,
+                    }}
+                    className={`relative flex h-[34px] w-14 items-center justify-center rounded-md font-mono text-xs font-medium text-ink transition-colors duration-300 ${
                       cellKey ? "cursor-pointer" : ""
                     }`}
                     style={cellKey ? { ...style, ...highlightStyle(hover, cellKey, i, j) } : style}
                     {...(cellKey ? cellHandlers(hover, { key: cellKey, i, j }) : {})}
                   >
                     {v === null ? "−∞" : masked ? "0" : v.toFixed(2)}
-                  </span>
+                  </motion.span>
                 );
               })}
             </div>
@@ -84,11 +98,28 @@ export function Operator({ children }: { children: React.ReactNode }) {
   return <span className="whitespace-nowrap font-mono text-lg font-medium text-muted">{children}</span>;
 }
 
-/** Lays matrices and operators out in a horizontally scrollable row. */
+/** Seconds between one block of an equation and the next. */
+const BLOCK_GAP = 0.35;
+
+/**
+ * Lays matrices and operators out in a horizontally scrollable row and
+ * reveals them left to right, so "E + PE = X" reads like it is being written.
+ */
 export function MatrixRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="overflow-x-auto pb-1">
-      <div className="flex w-max items-center gap-5">{children}</div>
+      <div className="flex w-max items-center gap-5">
+        {Children.toArray(children).map((child, k) => (
+          <motion.div
+            key={k}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: k * BLOCK_GAP, duration: 0.25, ease: "easeOut" }}
+          >
+            <SequenceDelay.Provider value={k * BLOCK_GAP}>{child}</SequenceDelay.Provider>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

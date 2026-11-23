@@ -1,6 +1,13 @@
+"use client";
+
+import { motion } from "motion/react";
 import { MASKED_STYLE, maxAbs, probStyle, valueStyle } from "@/lib/colors";
 import { argmax, type MaskedMatrix, type Matrix } from "@/lib/transformer";
 import { cellHandlers, highlightStyle, useHover } from "./hover";
+
+/** Rows sweep in top to bottom, each cell a beat after its left neighbour. */
+const HEAT_ROW = 0.09;
+const HEAT_CELL = 0.035;
 
 interface AttentionHeatmapProps {
   tokens: string[];
@@ -54,21 +61,29 @@ export function AttentionHeatmap({ tokens, scores, weights, mode, focus, onFocus
                     : valueStyle(s, max);
                 const text = mode === "softmax" ? (masked ? "0" : weights[i][j].toFixed(2)) : masked ? "−∞" : s.toFixed(2);
                 return (
-                  <span
+                  <motion.span
                     key={j}
-                    className="relative flex h-11 w-16 cursor-pointer items-center justify-center rounded-md font-mono text-xs text-ink"
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * HEAT_ROW + j * HEAT_CELL, type: "spring", stiffness: 380, damping: 26 }}
+                    className="relative flex h-11 w-16 cursor-pointer items-center justify-center rounded-md font-mono text-xs text-ink transition-colors duration-300"
                     style={{ ...style, ...highlightStyle(hover, cellKey, i, j) }}
                     {...cellHandlers(hover, { key: cellKey, i, j })}
                   >
                     {text}
-                  </span>
+                  </motion.span>
                 );
               })}
 
               {mode === "softmax" && (
-                <span className="pl-2 font-mono text-xs text-muted">
+                <motion.span
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * HEAT_ROW + tokens.length * HEAT_CELL + 0.1 }}
+                  className="pl-2 font-mono text-xs text-muted"
+                >
                   Σ {weights[i].reduce((a, b) => a + b, 0).toFixed(2)}
-                </span>
+                </motion.span>
               )}
             </div>
           );

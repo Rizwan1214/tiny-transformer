@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { relatedCells, type CellRef } from "@/lib/explain";
 import { STEPS } from "@/lib/steps";
@@ -43,6 +44,7 @@ export function Visualizer() {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-canvas text-ink">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-[1360px] flex-wrap items-center gap-x-7 gap-y-4 px-6 py-4">
@@ -111,6 +113,15 @@ export function Visualizer() {
         <StepRail current={step} onSelect={goTo} />
 
         <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-8">
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            className="flex min-w-0 flex-col gap-5"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
           <div className="flex flex-col gap-2.5">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
               Step {step + 1} / {STEPS.length}
@@ -129,6 +140,8 @@ export function Visualizer() {
             </HoverContext.Provider>
             {hasNumbers && <CalcPanel trace={trace} active={activeCell} />}
           </div>
+          </motion.div>
+          </AnimatePresence>
 
           <div className="flex flex-wrap items-center gap-4">
             <button
@@ -169,5 +182,6 @@ export function Visualizer() {
         </section>
       </main>
     </div>
+    </MotionConfig>
   );
 }
