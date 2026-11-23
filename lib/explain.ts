@@ -3,12 +3,20 @@
 
 import { D_MODEL, LOGIT_SCALE, WEIGHTS, embed, type Matrix, type TransformerTrace } from "./transformer";
 
-export type CellKey = "E" | "PE" | "X" | "Q" | "K" | "V" | "S" | "A" | "Z" | "Y" | "F" | "H" | "P";
+// Per-head cells carry `head` (0-based); titles show it as a subscript (S₁, S₂).
+
+export type CellKey =
+  | "E" | "PE" | "X" | "Q" | "K" | "V" | "S" | "A" | "Z" | "C" | "O" | "Y" | "F" | "H" | "P";
 
 export interface CellRef {
   key: CellKey;
   i: number; // row (token index; vocab index for "P")
   j: number; // column (dimension or key-token index)
+  /**
+   * Attention head, for per-head cells: S, A and Z always; V when it is the
+   * head's own d_head-wide slice rather than the full matrix.
+   */
+  head?: number;
 }
 
 /** A cell, a whole row (`j` omitted) or a whole column (`i` omitted) that fed the active cell. */
@@ -16,6 +24,7 @@ export interface RelatedRef {
   key: CellKey;
   i?: number;
   j?: number;
+  head?: number;
 }
 
 export interface Explanation {
@@ -44,6 +53,13 @@ function layerNormLines(rowName: string, r: number[], j: number): string[] {
 export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
   const { i, j } = ref;
   const tok = (k: number) => `${k + 1}.${t.tokens[k]}`;
+  const h = ref.head ?? 0;
+  const hd = t.heads[h];
+  const multi = t.numHeads > 1;
+  /** "S" for one head, "S₁"/"S₂" for several, so titles say which head. */
+  const sub = (name: string) => (multi ? `${name}${"₁₂₃₄"[h]}` : name);
+  const rootD = Math.sqrt(t.dHead);
+  const rootDText = Number.isInteger(rootD) ? String(rootD) : rootD.toFixed(3);
 
   switch (ref.key) {
     case "E":
@@ -78,70 +94,110 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
     case "K":
     case "V": {
       const W = { Q: WEIGHTS.Wq, K: WEIGHTS.Wk, V: WEIGHTS.Wv }[ref.key];
+      // A head's V slice: column j of V_h is column (h·d_head + j) of the full V.
+      const fullJ = ref.head === undefined ? j : h * t.dHead + j;
+      const headOf = Math.floor(fullJ / t.dHead) + 1;
       return {
-        title: `${ref.key}[${tok(i)}, d${j}]`,
-        lines: [`X[${tok(i)}] · W_${ref.key}[:, ${j}]`, `= ${dotTerms(t.X[i], col(W, j))}`],
-        result: f(t[ref.key][i][j]),
+        title:
+          ref.head === undefined
+            ? `${ref.key}[${tok(i)}, d${j}]`
+            : `${sub(ref.key)}[${tok(i)}, ${j}]  (= ${ref.key}[${tok(i)}, d${fullJ}])`,
+        lines: [
+          `X[${tok(i)}] · W_${ref.key}[:, ${fullJ}]`,
+          `= ${dotTerms(t.X[i], col(W, fullJ))}`,
+          ...(multi ? [`(column d${fullJ} head ${headOf} ka hissa hai)`] : []),
+        ],
+        result: f(t[ref.key][i][fullJ]),
       };
     }
 
     case "S": {
-      const s = t.S[i][j];
+      const s = hd.S[i][j];
       if (s === null) {
         return {
-          title: `S[${tok(i)} → ${tok(j)}]`,
+          title: `${sub("S")}[${tok(i)} → ${tok(j)}]`,
           lines: [`Key position ${j + 1} > query position ${i + 1}`, `Future token, causal mask laga diya`],
           result: "−∞",
         };
       }
-      const raw = dot(t.Q[i], t.K[j]);
+      const raw = dot(hd.Q[i], hd.K[j]);
       return {
-        title: `S[${tok(i)} → ${tok(j)}]`,
+        title: `${sub("S")}[${tok(i)} → ${tok(j)}]`,
         lines: [
-          `Q[${tok(i)}] · K[${tok(j)}] / √${D_MODEL}`,
-          `= (${dotTerms(t.Q[i], t.K[j])}) / ${Math.sqrt(D_MODEL)}`,
-          `= ${f(raw)} / ${Math.sqrt(D_MODEL)}`,
+          `${sub("Q")}[${tok(i)}] · ${sub("K")}[${tok(j)}] / √${t.dHead}`,
+          `= (${dotTerms(hd.Q[i], hd.K[j])}) / ${rootDText}`,
+          `= ${f(raw)} / ${rootDText}`,
         ],
         result: f(s),
       };
     }
 
     case "A": {
-      if (t.S[i][j] === null) {
+      if (hd.S[i][j] === null) {
         return {
-          title: `A[${tok(i)} → ${tok(j)}]`,
+          title: `${sub("A")}[${tok(i)} → ${tok(j)}]`,
           lines: [`S = −∞, aur e^(−∞) = 0`],
           result: "0.00",
         };
       }
-      const row = t.S[i];
+      const row = hd.S[i];
       const finite = row.filter((v): v is number => v !== null);
       const max = Math.max(...finite);
       const exps = row.map((v) => (v === null ? 0 : Math.exp(v - max)));
       const sum = exps.reduce((a, b) => a + b, 0);
       return {
-        title: `A[${tok(i)} → ${tok(j)}]`,
+        title: `${sub("A")}[${tok(i)} → ${tok(j)}]`,
         lines: [
           `e^S[${tok(i)}, ${tok(j)}] / Σ e^S[${tok(i)}, k]`,
           `(stable softmax: har score se row ka max ${f(max)} minus kiya)`,
           `= ${exps[j].toFixed(3)} / (${exps.filter((_, k) => row[k] !== null).map((e) => e.toFixed(3)).join(" + ")})`,
           `= ${exps[j].toFixed(3)} / ${sum.toFixed(3)}`,
         ],
-        result: f(t.A[i][j]),
+        result: f(hd.A[i][j]),
       };
     }
 
     case "Z":
       return {
-        title: `Z[${tok(i)}, d${j}]`,
-        lines: [`Σ_k A[${tok(i)}, k] × V[k, d${j}]`, `= ${dotTerms(t.A[i], col(t.V, j))}`],
-        result: f(t.Z[i][j]),
+        title: `${sub("Z")}[${tok(i)}, ${j}]`,
+        lines: [
+          `Σ_k ${sub("A")}[${tok(i)}, k] × ${sub("V")}[k, ${j}]`,
+          `= ${dotTerms(hd.A[i], col(hd.V, j))}`,
+        ],
+        result: f(hd.Z[i][j]),
+      };
+
+    case "C": {
+      const fromHead = Math.floor(j / t.dHead);
+      const inHead = j % t.dHead;
+      return {
+        title: `Concat[${tok(i)}, d${j}]`,
+        lines: multi
+          ? [
+              `Concat = [${t.heads.map((_, k) => `Z${"₁₂₃₄"[k]}`).join(" | ")}]`,
+              `Column d${j} → head ${fromHead + 1} ka column ${inHead}`,
+              `= Z${"₁₂₃₄"[fromHead]}[${tok(i)}, ${inHead}]`,
+            ]
+          : [`Ek hi head hai, is liye Concat = Z`, `= Z[${tok(i)}, ${j}]`],
+        result: f(t.C[i][j]),
+      };
+    }
+
+    case "O":
+      return {
+        title: `O[${tok(i)}, d${j}]`,
+        lines: [
+          `Concat[${tok(i)}] · W_O[:, ${j}]`,
+          `= ${dotTerms(t.C[i], col(WEIGHTS.Wo, j))}`,
+          ...(multi ? [`(W_O sab heads ki info ko aapas mein mix karta hai)`] : []),
+        ],
+        result: f(t.O[i][j]),
       };
 
     case "Y":
       return {
         title: `Y[${tok(i)}, d${j}]`,
-        lines: [`LayerNorm(X + Z)`, ...layerNormLines(`X + Z`, t.R1[i], j)],
+        lines: [`LayerNorm(X + O)`, ...layerNormLines(`X + O`, t.R1[i], j)],
         result: f(t.Y[i][j]),
       };
 
@@ -185,14 +241,18 @@ export function explainCell(t: TransformerTrace, ref: CellRef): Explanation {
 }
 
 /** Which cells fed the active one, so the UI can outline them. */
-export function relatedCells(ref: CellRef | null): RelatedRef[] {
+export function relatedCells(ref: CellRef | null, dHead: number): RelatedRef[] {
   if (!ref) return [];
-  const { i, j } = ref;
+  const { i, j, head } = ref;
   switch (ref.key) {
     case "X":
       return [{ key: "E", i, j }, { key: "PE", i, j }];
     case "Z":
-      return [{ key: "A", i }, { key: "V", j }];
+      return [{ key: "A", i, head }, { key: "V", j, head }];
+    case "C":
+      return [{ key: "Z", i, j: j % dHead, head: Math.floor(j / dHead) }];
+    case "O":
+      return [{ key: "C", i }];
     case "F":
       return [{ key: "Y", i }];
     case "H":
@@ -202,6 +262,12 @@ export function relatedCells(ref: CellRef | null): RelatedRef[] {
   }
 }
 
-export function isRelated(related: RelatedRef[], key: CellKey, i: number, j: number): boolean {
-  return related.some((r) => r.key === key && (r.i === undefined || r.i === i) && (r.j === undefined || r.j === j));
+export function isRelated(related: RelatedRef[], key: CellKey, i: number, j: number, head?: number): boolean {
+  return related.some(
+    (r) =>
+      r.key === key &&
+      r.head === head &&
+      (r.i === undefined || r.i === i) &&
+      (r.j === undefined || r.j === j),
+  );
 }

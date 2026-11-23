@@ -4,7 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { relatedCells, type CellRef } from "@/lib/explain";
 import { STEPS } from "@/lib/steps";
-import { runTransformer } from "@/lib/transformer";
+import { HEAD_OPTIONS, runTransformer, type HeadCount } from "@/lib/transformer";
 import { CalcPanel } from "./CalcPanel";
 import { HoverContext } from "./hover";
 import { StepRail } from "./StepRail";
@@ -18,19 +18,26 @@ export function Visualizer() {
   const [causalMask, setCausalMask] = useState(true);
   const [focusChoice, setFocusChoice] = useState<number | null>(null);
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
+  const [numHeads, setNumHeads] = useState<HeadCount>(1);
 
-  const trace = useMemo(() => runTransformer(text, causalMask), [text, causalMask]);
+  const trace = useMemo(() => runTransformer(text, causalMask, numHeads), [text, causalMask, numHeads]);
   const n = trace.tokens.length;
   const focus = focusChoice !== null && focusChoice < n ? focusChoice : n - 1;
   const meta = STEPS[step];
   const isLast = step === STEPS.length - 1;
   const hasNumbers = step >= 2;
 
-  // activeCell is cleared whenever the sentence or step changes, so it always fits the trace.
+  // activeCell is cleared whenever the sentence, step or head count changes, so it always fits the trace.
+  const dHead = trace.dHead;
   const hover = useMemo(
-    () => ({ active: activeCell, related: relatedCells(activeCell), select: setActiveCell }),
-    [activeCell],
+    () => ({ active: activeCell, related: relatedCells(activeCell, dHead), select: setActiveCell }),
+    [activeCell, dHead],
   );
+
+  const changeHeads = (h: HeadCount) => {
+    setNumHeads(h);
+    setActiveCell(null);
+  };
 
   const goTo = (next: number) => {
     setStep(next);
@@ -94,7 +101,22 @@ export function Visualizer() {
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className="rounded-lg border border-line bg-canvas px-2.5 py-1.5 font-mono text-xs text-ink-soft">d_model = 4</span>
-            <span className="rounded-lg border border-line bg-canvas px-2.5 py-1.5 font-mono text-xs text-ink-soft">1 head · 1 layer</span>
+            <div role="group" aria-label="Attention heads" className="flex items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
+              <span className="px-1.5 font-mono text-xs text-ink-soft">heads</span>
+              {HEAD_OPTIONS.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => changeHeads(h)}
+                  aria-pressed={numHeads === h}
+                  className={`h-9 min-w-9 cursor-pointer rounded-lg px-2 font-mono text-sm font-semibold ${
+                    numHeads === h ? "bg-ink text-white" : "text-ink hover:bg-white"
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => setCausalMask((m) => !m)}
@@ -115,7 +137,7 @@ export function Visualizer() {
         <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-8">
           <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={step}
+            key={`${step}-${numHeads}`}
             className="flex min-w-0 flex-col gap-5"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

@@ -19,6 +19,8 @@ interface MatrixGridProps {
   maskFrom?: MaskedMatrix;
   /** Makes cells explainable on hover/tap in the Calculation panel. */
   cellKey?: CellKey;
+  /** Attention head this matrix belongs to (per-head A, V slice, Z). */
+  head?: number;
 }
 
 export function MatrixGrid({
@@ -29,6 +31,7 @@ export function MatrixGrid({
   variant = "value",
   maskFrom,
   cellKey,
+  head,
 }: MatrixGridProps) {
   const hover = useHover();
   const start = useSequenceDelay();
@@ -79,8 +82,8 @@ export function MatrixGrid({
                     className={`relative flex h-[34px] w-14 items-center justify-center rounded-md font-mono text-xs font-medium text-ink transition-colors duration-300 ${
                       cellKey ? "cursor-pointer" : ""
                     }`}
-                    style={cellKey ? { ...style, ...highlightStyle(hover, cellKey, i, j) } : style}
-                    {...(cellKey ? cellHandlers(hover, { key: cellKey, i, j }) : {})}
+                    style={cellKey ? { ...style, ...highlightStyle(hover, cellKey, i, j, head) } : style}
+                    {...(cellKey ? cellHandlers(hover, { key: cellKey, i, j, head }) : {})}
                   >
                     {v === null ? "−∞" : masked ? "0" : v.toFixed(2)}
                   </motion.span>
@@ -105,7 +108,7 @@ const BLOCK_GAP = 0.35;
  * Lays matrices and operators out in a horizontally scrollable row and
  * reveals them left to right, so "E + PE = X" reads like it is being written.
  */
-export function MatrixRow({ children }: { children: React.ReactNode }) {
+export function MatrixRow({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
     <div className="overflow-x-auto pb-1">
       <div className="flex w-max items-center gap-5">
@@ -114,9 +117,9 @@ export function MatrixRow({ children }: { children: React.ReactNode }) {
             key={k}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: k * BLOCK_GAP, duration: 0.25, ease: "easeOut" }}
+            transition={{ delay: delay + k * BLOCK_GAP, duration: 0.25, ease: "easeOut" }}
           >
-            <SequenceDelay.Provider value={k * BLOCK_GAP}>{child}</SequenceDelay.Provider>
+            <SequenceDelay.Provider value={delay + k * BLOCK_GAP}>{child}</SequenceDelay.Provider>
           </motion.div>
         ))}
       </div>

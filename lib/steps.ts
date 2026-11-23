@@ -45,39 +45,39 @@ export const STEPS: StepMeta[] = [
     formula: "Q = X·W_Q   K = X·W_K   V = X·W_V",
     shape: "3 × (n × 4)",
     explain:
-      "Har token teen roles leta hai: Query (main kya dhoond raha hoon), Key (mere paas kya hai), Value (main aage kya dunga). Teeno alag weight matrices se bante hain.",
+      "Har token teen roles leta hai: Query (main kya dhoond raha hoon), Key (mere paas kya hai), Value (main aage kya dunga). Teeno alag weight matrices se bante hain. Multi-head mein ye columns heads mein baant diye jate hain.",
   },
   {
     id: "scores",
     title: "Attention Scores",
-    formula: "S = Q·Kᵀ / √d",
-    shape: "n × n",
+    formula: "S_h = Q_h·K_hᵀ / √d_head",
+    shape: "n × n  (har head ka apna)",
     explain:
-      "Har Query ka har Key ke saath dot product. Bara number matlab zyada match. Causal mask on ho to koi token apne baad wale tokens nahi dekh sakta, wahan −∞ lag jata hai.",
+      "Har Query ka har Key ke saath dot product. Bara number matlab zyada match. Har head ye kaam apne hisse ke columns par alag karta hai. Causal mask on ho to koi token apne baad wale tokens nahi dekh sakta, wahan −∞ lag jata hai.",
   },
   {
     id: "softmax",
     title: "Softmax",
-    formula: "A = softmax(S)  (har row)",
-    shape: "n × n",
+    formula: "A_h = softmax(S_h)  (har row)",
+    shape: "n × n  (har head ka apna)",
     explain:
-      "Har row ko probabilities mein badla jata hai, aur har row ka total 1 hota hai. Ye attention map hai: kaun sa token kis par kitna focus kar raha hai.",
+      "Har row ko probabilities mein badla jata hai, aur har row ka total 1 hota hai. Ye attention map hai: kaun sa token kis par kitna focus kar raha hai. 2 heads hon to dono ke maps compare karo, aksar wo alag tokens dekhte hain.",
   },
   {
     id: "weighted",
     title: "Weighted Sum",
-    formula: "Z = A·V",
+    formula: "Z_h = A_h·V_h   O = Concat(Z_h)·W_O",
     shape: "n × 4",
     explain:
-      "Har token apne attention weights ke hisaab se doosre tokens ki Values mix karta hai. Ab har vector mein sirf apna nahi, poore sentence ka context hai.",
+      "Har head apne attention weights se Values mix karta hai (Z_h). Phir sab heads ke Z ko saath jod kar (Concat) W_O se multiply karte hain, jo un ki info ko aapas mein milata hai. Ab har vector mein poore sentence ka context hai.",
   },
   {
     id: "ffn",
     title: "Add & Norm + FFN",
-    formula: "Y = LN(X + Z)   H = LN(Y + FFN(Y))",
+    formula: "Y = LN(X + O)   H = LN(Y + FFN(Y))",
     shape: "n × 4",
     explain:
-      "Residual connection (X + Z) original info bachata hai, LayerNorm numbers ko stable rakhta hai, aur Feed-Forward network (4 → 8 → 4) har token ko alag se process karta hai.",
+      "Residual connection (X + O) original info bachata hai, LayerNorm numbers ko stable rakhta hai, aur Feed-Forward network (4 → 8 → 4) har token ko alag se process karta hai.",
   },
   {
     id: "next",

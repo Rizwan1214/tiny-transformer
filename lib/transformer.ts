@@ -115,24 +115,41 @@ export const WEIGHTS = {
   Wq: randomMatrix(11, D_MODEL, D_MODEL),
   Wk: randomMatrix(22, D_MODEL, D_MODEL),
   Wv: randomMatrix(33, D_MODEL, D_MODEL),
+  Wo: randomMatrix(66, D_MODEL, D_MODEL),
   W1: randomMatrix(44, D_MODEL, D_FF),
   W2: randomMatrix(55, D_FF, D_MODEL),
 };
 
+/** Head counts that divide d_model evenly. */
+export const HEAD_OPTIONS = [1, 2] as const;
+export type HeadCount = (typeof HEAD_OPTIONS)[number];
+
+/** One attention head works on its own slice of Q, K and V columns. */
+export interface HeadTrace {
+  Q: Matrix; // n × d_head
+  K: Matrix;
+  V: Matrix;
+  S: MaskedMatrix; // scaled scores Q_h·K_hᵀ/√d_head
+  A: Matrix; // attention weights
+  Z: Matrix; // A_h·V_h, n × d_head
+}
+
 export interface TransformerTrace {
   tokens: string[];
   ids: number[];
+  numHeads: HeadCount;
+  dHead: number;
   E: Matrix; // embeddings
   PE: Matrix; // positional encoding
   X: Matrix; // E + PE
-  Q: Matrix;
+  Q: Matrix; // full n × d_model projections, before splitting into heads
   K: Matrix;
   V: Matrix;
-  S: MaskedMatrix; // scaled scores Q·Kᵀ/√d
-  A: Matrix; // attention weights
-  Z: Matrix; // A·V
-  R1: Matrix; // X + Z (residual, before LayerNorm)
-  Y: Matrix; // LN(X + Z)
+  heads: HeadTrace[];
+  C: Matrix; // Concat(Z_1 … Z_h), n × d_model
+  O: Matrix; // C·W_O, the attention block's output
+  R1: Matrix; // X + O (residual, before LayerNorm)
+  Y: Matrix; // LN(X + O)
   hidden: Matrix; // ReLU(Y·W1), the FFN's 8-wide hidden layer
   F: Matrix; // FFN(Y)
   R2: Matrix; // Y + F (residual, before LayerNorm)
@@ -142,7 +159,12 @@ export interface TransformerTrace {
   probs: number[]; // next-token probabilities over `vocab`
 }
 
-export function runTransformer(text: string, causalMask = true): TransformerTrace {
+/** Columns [start, start + width) of M. */
+export function sliceCols(M: Matrix, start: number, width: number): Matrix {
+  return M.map((r) => r.slice(start, start + width));
+}
+
+export function runTransformer(text: string, causalMask = true, numHeads: HeadCount = 1): TransformerTrace {
   const tokens = tokenize(text);
   const n = tokens.length;
   const ids = tokens.map(tokenId);
@@ -155,14 +177,25 @@ export function runTransformer(text: string, causalMask = true): TransformerTrac
   const K = matmul(X, WEIGHTS.Wk);
   const V = matmul(X, WEIGHTS.Wv);
 
-  const scale = Math.sqrt(D_MODEL);
-  const S: MaskedMatrix = matmul(Q, transpose(K)).map((row, i) =>
-    row.map((v, j) => (causalMask && j > i ? null : v / scale)),
-  );
-  const A = S.map(softmax);
-  const Z = matmul(A, V);
+  // Each head attends using its own d_head-wide slice of Q, K and V.
+  const dHead = D_MODEL / numHeads;
+  const scale = Math.sqrt(dHead);
+  const heads: HeadTrace[] = Array.from({ length: numHeads }, (_, h) => {
+    const Qh = sliceCols(Q, h * dHead, dHead);
+    const Kh = sliceCols(K, h * dHead, dHead);
+    const Vh = sliceCols(V, h * dHead, dHead);
+    const S: MaskedMatrix = matmul(Qh, transpose(Kh)).map((row, i) =>
+      row.map((v, j) => (causalMask && j > i ? null : v / scale)),
+    );
+    const A = S.map(softmax);
+    return { Q: Qh, K: Kh, V: Vh, S, A, Z: matmul(A, Vh) };
+  });
 
-  const R1 = add(X, Z);
+  // Concatenate the heads' outputs side by side, then mix them with W_O.
+  const C = tokens.map((_, i) => heads.flatMap((hd) => hd.Z[i]));
+  const O = matmul(C, WEIGHTS.Wo);
+
+  const R1 = add(X, O);
   const Y = layerNorm(R1);
   const hidden = relu(matmul(Y, WEIGHTS.W1));
   const F = matmul(hidden, WEIGHTS.W2);
@@ -175,5 +208,8 @@ export function runTransformer(text: string, causalMask = true): TransformerTrac
   const logits = vocab.map((w) => LOGIT_SCALE * embed(w).reduce((s, v, k) => s + v * last[k], 0));
   const probs = softmax(logits);
 
-  return { tokens, ids, E, PE, X, Q, K, V, S, A, Z, R1, Y, hidden, F, R2, H, vocab, logits, probs };
+  return {
+    tokens, ids, numHeads, dHead, E, PE, X, Q, K, V, heads, C, O,
+    R1, Y, hidden, F, R2, H, vocab, logits, probs,
+  };
 }
