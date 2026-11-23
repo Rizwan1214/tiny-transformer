@@ -56,9 +56,9 @@ export function Visualizer() {
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-canvas text-ink">
       <header className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-[1360px] flex-wrap items-center gap-x-7 gap-y-4 px-6 py-4">
+        <div className="mx-auto flex max-w-[1360px] flex-wrap items-center gap-x-4 gap-y-3 px-3 py-3 md:gap-x-7 md:gap-y-4 md:px-6 md:py-4">
           <div className="flex shrink-0 items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-ink">
+            <div className="hidden h-9 w-9 items-center justify-center rounded-[10px] bg-ink sm:flex">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" rx="1.5" />
                 <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -69,7 +69,7 @@ export function Visualizer() {
             </div>
             <div className="flex flex-col">
               <span className="font-display text-lg font-bold leading-tight">Tiny Transformer</span>
-              <span className="text-xs text-muted">Har step screen par, live math ke saath</span>
+              <span className="hidden text-xs text-muted sm:block">Har step screen par, live math ke saath</span>
             </div>
           </div>
 
@@ -85,7 +85,7 @@ export function Visualizer() {
                 type="button"
                 onClick={() => setMode(value)}
                 aria-pressed={mode === value}
-                className={`h-9 cursor-pointer rounded-lg px-3 text-[13px] font-semibold ${
+                className={`h-9 cursor-pointer rounded-lg px-2 text-xs font-semibold sm:px-3 sm:text-[13px] ${
                   mode === value ? "bg-ink text-white" : "text-ink hover:bg-white"
                 }`}
               >
@@ -109,14 +109,14 @@ export function Visualizer() {
                 className="h-11 min-w-0 flex-1 rounded-[10px] border border-line-strong bg-white px-3.5 font-mono text-[15px] text-ink"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-muted">Try:</span>
+            <div className="-mx-3 flex items-center gap-1.5 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+              <span className="shrink-0 text-xs text-muted">Try:</span>
               {PRESETS.map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => changeText(p)}
-                  className="min-h-8 cursor-pointer rounded-full border border-line bg-canvas px-2.5 py-1 font-mono text-xs text-ink-soft hover:border-line-strong"
+                  className="min-h-8 shrink-0 cursor-pointer whitespace-nowrap rounded-full border border-line bg-canvas px-2.5 py-1 font-mono text-xs text-ink-soft hover:border-line-strong"
                 >
                   {p}
                 </button>
@@ -125,7 +125,7 @@ export function Visualizer() {
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <span className="rounded-lg border border-line bg-canvas px-2.5 py-1.5 font-mono text-xs text-ink-soft">d_model = 4</span>
+            <span className="hidden rounded-lg border border-line bg-canvas px-2.5 py-1.5 font-mono text-xs text-ink-soft sm:inline">d_model = 4</span>
             <div role="group" aria-label="Attention heads" className="flex items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
               <span className="px-1.5 font-mono text-xs text-ink-soft">heads</span>
               {HEAD_OPTIONS.map((h) => (
@@ -159,16 +159,16 @@ export function Visualizer() {
       </header>
 
       {mode === "gpt2" ? (
-      <main className="mx-auto max-w-[1360px] p-6">
-        <section className="min-w-0 rounded-2xl border border-line bg-white p-8">
+      <main className="mx-auto max-w-[1360px] p-3 md:p-6">
+        <section className="min-w-0 rounded-2xl border border-line bg-white p-4 md:p-8">
           <Gpt2Explorer />
         </section>
       </main>
       ) : (
-      <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-6 p-6">
+      <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-4 p-3 md:gap-6 md:p-6">
         <StepRail current={step} onSelect={goTo} />
 
-        <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-8">
+        <section className="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-2xl border border-line bg-white p-4 md:p-8">
           <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`${step}-${numHeads}`}
@@ -182,7 +182,7 @@ export function Visualizer() {
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
               Step {step + 1} / {STEPS.length}
             </span>
-            <h1 className="m-0 font-display text-[34px] font-semibold leading-tight">{meta.title}</h1>
+            <h1 className="m-0 font-display text-[28px] font-semibold leading-tight md:text-[34px]">{meta.title}</h1>
             <div className="flex flex-wrap items-center gap-2">
               <code className="rounded-lg bg-accent-soft px-3 py-1.5 font-mono text-sm text-accent-ink">{meta.formula}</code>
               <span className="font-mono text-xs text-muted">{meta.shape}</span>
@@ -190,7 +190,7 @@ export function Visualizer() {
             <p className="m-0 max-w-[720px] text-base text-ink-soft">{meta.explain}</p>
           </div>
 
-          <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#FAFBFC] p-6">
+          <div className="flex min-h-[340px] min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#FAFBFC] p-3 md:p-6">
             <HoverContext.Provider value={hover}>
               <StepView step={step} trace={trace} focus={focus} onFocus={setFocusChoice} />
             </HoverContext.Provider>
