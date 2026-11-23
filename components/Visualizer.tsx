@@ -13,6 +13,7 @@ import { LangContext } from "./lang";
 import { StepRail } from "./StepRail";
 import { StepView } from "./StepView";
 import { ThemeToggle } from "./ThemeToggle";
+import { TrainingLab } from "./TrainingLab";
 
 const PRESETS = ["the cat sat on the mat", "i love cats", "main ghar ja raha hoon"];
 const LANG_KEY = "tiny-transformer:lang";
@@ -24,7 +25,7 @@ export function Visualizer() {
   const [focusChoice, setFocusChoice] = useState<number | null>(null);
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
   const [numHeads, setNumHeads] = useState<HeadCount>(1);
-  const [mode, setMode] = useState<"toy" | "gpt2">("toy");
+  const [mode, setMode] = useState<"toy" | "train" | "gpt2">("toy");
   const [lang, setLang] = useState<Lang>("ur");
   const t = (key: Parameters<typeof tr>[1], vars?: Record<string, string | number>) => tr(lang, key, vars);
 
@@ -106,10 +107,11 @@ export function Visualizer() {
           <div role="group" aria-label="Model" className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
             {(
               [
-                ["toy", t("modeToy")],
-                ["gpt2", t("modeGpt2")],
+                ["toy", t("modeToy"), "Toy"],
+                ["train", t("modeTrain"), "Train"],
+                ["gpt2", t("modeGpt2"), "GPT-2"],
               ] as const
-            ).map(([value, name]) => (
+            ).map(([value, name, short]) => (
               <button
                 key={value}
                 type="button"
@@ -119,7 +121,8 @@ export function Visualizer() {
                   mode === value ? "bg-ink text-on-ink" : "text-ink hover:bg-surface"
                 }`}
               >
-                {name}
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{name}</span>
               </button>
             ))}
           </div>
@@ -210,10 +213,10 @@ export function Visualizer() {
         </div>
       </header>
 
-      {mode === "gpt2" ? (
+      {mode !== "toy" ? (
       <main className="mx-auto max-w-[1360px] p-3 md:p-6">
         <section className="min-w-0 rounded-2xl border border-line bg-surface p-4 md:p-8">
-          <Gpt2Explorer />
+          {mode === "gpt2" ? <Gpt2Explorer /> : <TrainingLab />}
         </section>
       </main>
       ) : (

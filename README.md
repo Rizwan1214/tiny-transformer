@@ -8,6 +8,10 @@ Type a sentence and walk through every stage, from tokenization to next-token pr
 - Every step animates in, so equations like `E + PE = X` build left to right.
 - **Real GPT-2 mode** shows the trained GPT-2 small (124M): real BPE tokens, all 144 attention heads,
   and its actual next-token predictions for a set of example sentences.
+- **Training mode** trains a small transformer right in the browser: a live loss curve, its
+  next-word guess, and its attention, changing step by step. Built on a tiny scalar autograd
+  engine (`lib/autograd.ts`) and the Adam optimizer, no ML library. On the Roman Urdu corpus it
+  learns subject–verb agreement (main → hoon, tum → ho, wo → hai) by attending back to the subject.
 - **Roman Urdu or English** for every label and explanation, plus **light and dark themes**
   (follows the system until you pick one). Works on phones.
 
@@ -36,7 +40,7 @@ npm run dev
 
 Then open http://localhost:3000.
 
-Run the tests (the transformer math and the cell explanations):
+Run the tests (the transformer math, the cell explanations, autograd gradient checks and training):
 
 ```bash
 npm test
@@ -62,6 +66,8 @@ worth inspecting from the data itself.
 ```
 lib/transformer.ts   pure math: tokenize, embed, multi-head attention, softmax, layer norm, FFN
 lib/explain.ts       the arithmetic behind any cell, for the Calculation panel
+lib/autograd.ts      scalar autograd (Value, backward) used for training
+lib/trainer.ts       trainable tiny transformer, corpora, Adam
 lib/gpt2.ts          types and loaders for the precomputed GPT-2 data
 lib/i18n.ts          Roman Urdu and English strings
 scripts/             export_gpt2.py, which produces public/gpt2/
