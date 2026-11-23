@@ -1,0 +1,33 @@
+{
+  "model": "gpt2",
+  "params": "124M",
+  "layers": 12,
+  "heads": 12,
+  "dModel": 768,
+  "presets": [
+    {
+      "slug": "eiffel",
+      "text": "The Eiffel Tower is located in the city of"
+    },
+    {
+      "slug": "names",
+      "text": "When Mary and John went to the store, John gave a drink to"
+    },
+    {
+      "slug": "repeat",
+      "text": "Harry Potter went to Hogwarts. Harry Potter went to"
+    },
+    {
+      "slug": "pronoun",
+      "text": "The cat sat on the mat because it was"
+    },
+    {
+      "slug": "counting",
+      "text": "1, 2, 3, 4, 5,"
+    },
+    {
+      "slug": "lahore",
+      "text": "Lahore is a city in the country of"
+    }
+  ]
+}

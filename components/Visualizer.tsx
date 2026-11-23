@@ -6,6 +6,7 @@ import { relatedCells, type CellRef } from "@/lib/explain";
 import { STEPS } from "@/lib/steps";
 import { HEAD_OPTIONS, runTransformer, type HeadCount } from "@/lib/transformer";
 import { CalcPanel } from "./CalcPanel";
+import { Gpt2Explorer } from "./Gpt2Explorer";
 import { HoverContext } from "./hover";
 import { StepRail } from "./StepRail";
 import { StepView } from "./StepView";
@@ -19,6 +20,7 @@ export function Visualizer() {
   const [focusChoice, setFocusChoice] = useState<number | null>(null);
   const [activeCell, setActiveCell] = useState<CellRef | null>(null);
   const [numHeads, setNumHeads] = useState<HeadCount>(1);
+  const [mode, setMode] = useState<"toy" | "gpt2">("toy");
 
   const trace = useMemo(() => runTransformer(text, causalMask, numHeads), [text, causalMask, numHeads]);
   const n = trace.tokens.length;
@@ -71,6 +73,29 @@ export function Visualizer() {
             </div>
           </div>
 
+          <div role="group" aria-label="Model" className="flex shrink-0 items-center gap-1 rounded-[10px] border border-line bg-canvas p-1">
+            {(
+              [
+                ["toy", "Toy model"],
+                ["gpt2", "Real GPT-2"],
+              ] as const
+            ).map(([value, name]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                aria-pressed={mode === value}
+                className={`h-9 cursor-pointer rounded-lg px-3 text-[13px] font-semibold ${
+                  mode === value ? "bg-ink text-white" : "text-ink hover:bg-white"
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+
+          {mode === "toy" && (
+          <>
           <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               <label htmlFor="sentence" className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">
@@ -128,9 +153,18 @@ export function Visualizer() {
               Causal mask: {causalMask ? "On" : "Off"}
             </button>
           </div>
+          </>
+          )}
         </div>
       </header>
 
+      {mode === "gpt2" ? (
+      <main className="mx-auto max-w-[1360px] p-6">
+        <section className="min-w-0 rounded-2xl border border-line bg-white p-8">
+          <Gpt2Explorer />
+        </section>
+      </main>
+      ) : (
       <main className="mx-auto flex max-w-[1360px] flex-wrap items-start gap-6 p-6">
         <StepRail current={step} onSelect={goTo} />
 
@@ -203,6 +237,7 @@ export function Visualizer() {
           </div>
         </section>
       </main>
+      )}
     </div>
     </MotionConfig>
   );
